@@ -16,6 +16,19 @@ export default function CatalogoKaori() {
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [carrito, setCarrito] = useState<any[]>([]);
 
+  // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
+  // Este bloque detecta cuando el usuario usa el botón físico o gesto de "atrás" en su celular.
+  // Su función es cerrar el cuadro de detalles del producto en lugar de cerrar toda la página web. // NO QUITAR
+  useEffect(() => {
+    const manejarBotonAtras = () => {
+      if (sel) {
+        setSel(null);
+      }
+    };
+    window.addEventListener("popstate", manejarBotonAtras);
+    return () => window.removeEventListener("popstate", manejarBotonAtras);
+  }, [sel]);
+
   // ─── CATEGORÍAS BIEN BOLIVIANAS Y ORDENADAS ───
   const categoriasConfig = [
     { id: "Todo", icon: "✨", label: "Todo" },
@@ -47,15 +60,20 @@ export default function CatalogoKaori() {
     const coincideCat =
       categoriaSel === "Todo" ||
       p.descripcion?.toLowerCase().includes(categoriaSel.toLowerCase()) ||
+      p.categoria?.toLowerCase().includes(categoriaSel.toLowerCase()) || // Filtro por columna nueva
       p.nombre?.toLowerCase().includes(categoriaSel.toLowerCase());
     return coincideBusqueda && coincideCat && coincideOferta;
   });
 
+  // Esta función guarda un punto en la memoria del navegador cuando abres un producto.
+  // Sirve para que el celular crea que "entraste" a otra página y habilite el botón de volver. // NO QUITAR
   const abrirProducto = (p: any) => {
     setSel(p);
     window.history.pushState({ modalOpen: true }, "");
   };
 
+  // Esta función limpia la memoria de navegación cuando cierras el producto con la "X".
+  // Evita que el historial del navegador se llene de basura si cierras el modal manualmente. // NO QUITAR
   const cerrarProducto = () => {
     setSel(null);
     if (window.history.state?.modalOpen) window.history.back();
