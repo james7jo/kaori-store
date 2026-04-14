@@ -1,56 +1,163 @@
 "use client";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
-export default function TarjetaProducto({ producto, onClick }: { producto: any, onClick: () => void }) {
+// ⭐ Rating
+function StarRating({ score }: { score: number }) {
   return (
-    <motion.div 
-      onClick={onClick} 
+    <div className="flex gap-[2px]">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          className={`text-[10px] ${
+            i <= score ? "text-orange-400" : "text-gray-700"
+          }`}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export default function TarjetaProducto({ producto, onClick }: any) {
+  const [loaded, setLoaded] = useState(false);
+
+  // ⭐ cada 5 ventas = sube estrella
+  const rating = Math.max(
+    1,
+    Math.min(5, Math.floor((producto.vendidos || 0) / 5) + 1),
+  );
+
+  const tieneDescuento = producto.descuento && producto.descuento !== "";
+
+  // 🧠 BADGE INTELIGENTE
+  const getBadge = () => {
+    if (tieneDescuento) {
+      return {
+        text: `-${producto.descuento}`,
+        style: "bg-red-500/10 border-red-500/30 text-red-400",
+      };
+    }
+
+    if ((producto.vendidos || 0) > 30) {
+      return {
+        text: "🔥 Top ventas",
+        style: "bg-orange-500/10 border-orange-500/30 text-orange-400",
+      };
+    }
+
+    if ((producto.vendidos || 0) < 5) {
+      return {
+        text: "🆕 Nuevo",
+        style: "bg-blue-500/10 border-blue-500/30 text-blue-400",
+      };
+    }
+
+    if (producto.stock > 0 && producto.stock <= 5) {
+      return {
+        text: "⏳ Últimas",
+        style: "bg-yellow-500/10 border-yellow-500/30 text-yellow-400",
+      };
+    }
+
+    return {
+      text: "🚚 Envío Nacional",
+      style: "bg-white/5 border-white/10 text-gray-400",
+    };
+  };
+
+  const badge = getBadge();
+
+  return (
+    <motion.div
+      onClick={onClick}
       whileTap={{ scale: 0.95 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-[#121212] rounded-[2rem] overflow-hidden flex flex-col border border-white/5 shadow-2xl group relative"
+      whileHover={{ y: -4 }}
+      className="relative bg-[#0e0e0e] rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
     >
-      {/* Contenedor de Imagen */}
-      <div className="aspect-square relative bg-black overflow-hidden">
-        <img 
-          src={producto.imagen} 
-          className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-110" 
-          alt={producto.nombre} 
+      {/* Glow */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent pointer-events-none" />
+
+      {/* IMAGEN */}
+      <div className="aspect-square relative bg-[#080808] overflow-hidden">
+        {!loaded && (
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#1a1a1a] to-[#111]" />
+        )}
+
+        <img
+          src={producto.imagen}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          className={`w-full h-full object-contain p-3 transition duration-700 ${
+            loaded ? "opacity-100 scale-100" : "opacity-0 scale-110 blur-sm"
+          } group-hover:scale-110`}
+          alt={producto.nombre}
         />
-        
-        {/* Badge de Descuento Estilo Neón */}
-        {producto.descuento && (
-          <div className="absolute top-3 left-3 bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)] px-2.5 py-1 rounded-lg">
-            <p className="text-[10px] font-black text-white italic">
+
+        {/* Badge descuento en imagen */}
+        {tieneDescuento && (
+          <div className="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md">
+            <span className="text-[10px] font-bold text-white">
               -{producto.descuento}
-            </p>
+            </span>
           </div>
         )}
 
-        {/* Indicador de Stock sutil */}
-        {producto.stock <= 3 && producto.stock > 0 && (
-          <div className="absolute bottom-2 right-2 bg-orange-600/20 backdrop-blur-md border border-orange-500/30 px-2 py-0.5 rounded-md">
-            <p className="text-[8px] font-black text-orange-500 uppercase">¡Pocas unidades!</p>
+        {/* Agotado */}
+        {producto.stock === 0 && (
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+            <span className="text-xs font-black text-white bg-red-600 px-3 py-1 rounded-md">
+              Agotado
+            </span>
           </div>
         )}
       </div>
 
-      {/* Info del Producto */}
-      <div className="p-4 bg-gradient-to-b from-[#181818] to-[#121212]">
-        <div className="flex items-baseline gap-1">
-          <span className="text-orange-500 text-[10px] font-black italic">Bs</span>
-          <span className="text-2xl font-black italic tracking-tighter text-white">
-            {producto.precio}
+      {/* INFO */}
+      <div className="p-3 flex flex-col gap-2">
+        <h3 className="text-[13px] text-gray-100 font-bold uppercase line-clamp-2 h-[34px] group-hover:text-orange-400 transition">
+          {producto.nombre}
+        </h3>
+
+        {/* PRECIO + BADGE */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            {tieneDescuento && (
+              <span className="text-[10px] text-gray-500 line-through">
+                Bs {producto.precio + 10}
+              </span>
+            )}
+
+            <div className="flex items-end gap-1">
+              <span className="text-orange-500 text-xs font-bold">Bs</span>
+              <span className="text-2xl font-bold text-white">
+                {producto.precio}
+              </span>
+            </div>
+          </div>
+
+          {/* Badge dinámico */}
+          <div className={`px-2 py-[2px] rounded-md border ${badge.style}`}>
+            <span className="text-[8px] font-bold uppercase">{badge.text}</span>
+          </div>
+        </div>
+
+        {/* RATING */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 bg-white/5 px-2 py-[2px] rounded-md">
+            <StarRating score={rating} />
+            <span className="text-[10px] text-gray-400">{rating}.0</span>
+          </div>
+
+          <span className="text-[10px] text-gray-500">
+            {producto.vendidos ?? 0} vendidos
           </span>
         </div>
-        
-        <p className="text-[12px] text-gray-400 leading-tight mt-2 line-clamp-2 h-9 font-bold italic uppercase tracking-tight group-hover:text-orange-400 transition-colors">
-          {producto.nombre}
-        </p>
       </div>
 
-      {/* Brillo decorativo al hover */}
-      <div className="absolute inset-0 border-2 border-orange-500/0 group-hover:border-orange-500/10 rounded-[2rem] transition-all pointer-events-none"></div>
+      {/* Borde hover */}
+      <div className="absolute inset-0 rounded-2xl border border-orange-500/0 group-hover:border-orange-500/20 transition pointer-events-none" />
     </motion.div>
   );
 }
