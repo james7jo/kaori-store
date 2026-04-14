@@ -95,7 +95,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
           alt={producto.nombre}
         />
 
-        {/* Badge descuento en imagen */}
+        {/* 🔻 DESCUENTO */}
         {tieneDescuento && (
           <div className="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md">
             <span className="text-[10px] font-bold text-white">
@@ -104,7 +104,18 @@ export default function TarjetaProducto({ producto, onClick }: any) {
           </div>
         )}
 
-        {/* Agotado */}
+        {/* ⚠️ POCAS UNIDADES */}
+        {producto.stock > 0 && producto.stock <= 5 && (
+          <div className="absolute bottom-2 left-2 bg-yellow-500/90 px-2 py-1 rounded-md shadow-md animate-pulse">
+            <span className="text-[10px] font-bold text-black uppercase">
+              {producto.stock === 1
+                ? "🔥 Última unidad"
+                : `⚠️ Quedan ${producto.stock}`}
+            </span>
+          </div>
+        )}
+
+        {/* 🚫 AGOTADO */}
         {producto.stock === 0 && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
             <span className="text-xs font-black text-white bg-red-600 px-3 py-1 rounded-md">
