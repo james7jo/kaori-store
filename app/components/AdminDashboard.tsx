@@ -18,6 +18,7 @@ interface Producto {
   vendidos?: number;
   stock?: number;
   consultas?: number;
+  categoria?: string;
 }
 
 type FormState = {
@@ -28,6 +29,7 @@ type FormState = {
   galeria: string;
   descuento: string;
   stock: string;
+  categoria: string;
 };
 
 const FORM_VACIO: FormState = {
@@ -38,7 +40,20 @@ const FORM_VACIO: FormState = {
   galeria: "",
   descuento: "",
   stock: "",
+  categoria: "Todo",
 };
+
+const OPCIONES_CATEGORIA = [
+  { id: "Todo", label: "General / Novedades" },
+  { id: "Tecno", label: "Celulares y Audífonos" },
+  { id: "Electro", label: "Electrodomésticos" },
+  { id: "Insumos", label: "Insumos Médicos" },
+  { id: "PDF", label: "Libros y PDFs" },
+  { id: "Digital", label: "Juegos y Licencias" },
+  { id: "Outlet", label: "Ofertas Outlet" },
+];
+
+const ITEMS_POR_PAGINA = 10;
 
 // ─────────────────────────────────────────────
 // STAT CARD
@@ -117,9 +132,12 @@ function TarjetaInventario({
           alt={p.nombre}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded-md">
+        <div className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded-md flex flex-col gap-1">
           <span className="text-[8px] font-black tracking-widest text-gray-400 uppercase">
             #{p.id.toString().padStart(4, "0")}
+          </span>
+          <span className="text-[7px] font-black tracking-widest text-orange-500 uppercase">
+            {p.categoria || "Todo"}
           </span>
         </div>
         {p.descuento && (
@@ -191,32 +209,67 @@ function Campo({
 }
 
 const inputCls =
-  "w-full px-4 py-3.5 bg-white/5 border border-white/8 rounded-xl outline-none focus:border-orange-500/70 focus:bg-white/8 transition-all text-white placeholder-gray-600 text-sm font-medium";
+  "w-full px-4 py-3.5 bg-white/5 border border-white/8 rounded-xl outline-none focus:border-orange-500/70 focus:bg-white/8 transition-all text-white placeholder-gray-600 text-sm font-medium appearance-none";
 
 // ─────────────────────────────────────────────
-// PÁGINA PRINCIPAL
+// PÁGINA PRINCIPAL DASHBOARD
 // ─────────────────────────────────────────────
 export default function AdminDashboardKaori() {
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(0);
+  const [statsTotales, setStatsTotales] = useState({
+    dinero: 0,
+    consultas: 0,
+    descuentos: 0,
+  });
   const [idEditando, setIdEditando] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(FORM_VACIO);
   const [subiendo, setSubiendo] = useState(false);
   const [busqueda, setBusqueda] = useState("");
-  const [tabVista, setTabVista] = useState<"grid" | "lista">("grid");
+  const [filtroCategoria, setFiltroCategoria] = useState("Todo");
   const [seccion, setSeccion] = useState<"inventario" | "agregar">(
     "inventario",
   );
 
   useEffect(() => {
     cargarInventario();
-  }, []);
+    cargarMetricasGlobales();
+  }, [paginaActual, filtroCategoria]);
+
+  async function cargarMetricasGlobales() {
+    const { data, error } = await supabase
+      .from("productos")
+      .select("precio, descuento, consultas");
+
+    if (!error && data) {
+      const dinero = data.reduce((acc, p) => acc + Number(p.precio), 0);
+      const consultas = data.reduce((acc, p) => acc + (p.consultas ?? 0), 0);
+      const descuentos = data.filter(
+        (p) => p.descuento && p.descuento !== "",
+      ).length;
+      setStatsTotales({ dinero, consultas, descuentos });
+    }
+  }
 
   async function cargarInventario() {
-    const { data } = await supabase
-      .from("productos")
-      .select("*")
-      .order("id", { ascending: false });
-    setProductos(data || []);
+    const desde = paginaActual * ITEMS_POR_PAGINA;
+    const hasta = desde + ITEMS_POR_PAGINA - 1;
+
+    let consulta = supabase.from("productos").select("*", { count: "exact" });
+
+    if (filtroCategoria !== "Todo") {
+      consulta = consulta.eq("categoria", filtroCategoria);
+    }
+
+    const { data, count, error } = await consulta
+      .order("id", { ascending: false })
+      .range(desde, hasta);
+
+    if (!error) {
+      setProductos(data || []);
+      setTotalItems(count || 0);
+    }
   }
 
   const prepararEdicion = (p: Producto) => {
@@ -229,6 +282,7 @@ export default function AdminDashboardKaori() {
       galeria: p.galeria ?? "",
       descuento: p.descuento ?? "",
       stock: p.stock !== undefined ? String(p.stock) : "",
+      categoria: p.categoria || "Todo",
     });
     setSeccion("agregar");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -244,6 +298,7 @@ export default function AdminDashboardKaori() {
     if (!confirm("¿Eliminar este producto permanentemente?")) return;
     await supabase.from("productos").delete().eq("id", id);
     cargarInventario();
+    cargarMetricasGlobales();
   };
 
   const manejarEnvio = async (e: React.FormEvent) => {
@@ -282,7 +337,6 @@ export default function AdminDashboardKaori() {
         urlsGaleria = [...urlsGaleria, ...nuevasUrls];
       }
 
-      // CORRECCIÓN: Los datos ahora coinciden exactamente con lo que creaste en Supabase
       const datos: any = {
         nombre: form.nombre,
         precio: parseFloat(form.precio),
@@ -290,26 +344,19 @@ export default function AdminDashboardKaori() {
         imagen: urlPrincipal,
         galeria: urlsGaleria.join(","),
         descuento: form.descuento || null,
-        stock: form.stock ? parseInt(form.stock) : 0, // Si no hay stock, guardamos 0
+        stock: form.stock ? parseInt(form.stock) : 0,
+        categoria: form.categoria || "Todo",
       };
 
       if (idEditando) {
-        const { error: updateError } = await supabase
-          .from("productos")
-          .update(datos)
-          .eq("id", idEditando);
-        if (updateError) throw updateError;
+        await supabase.from("productos").update(datos).eq("id", idEditando);
       } else {
-        const { error: insertError } = await supabase
-          .from("productos")
-          .insert([{ ...datos, consultas: 0 }]); // Consultas nace en 0
-        if (insertError) throw insertError;
+        await supabase.from("productos").insert([{ ...datos, consultas: 0 }]);
       }
 
-      setIdEditando(null);
-      setForm(FORM_VACIO);
-      setSeccion("inventario");
+      cancelarEdicion();
       cargarInventario();
+      cargarMetricasGlobales();
     } catch (err: any) {
       alert("Error: " + err.message);
     } finally {
@@ -317,15 +364,9 @@ export default function AdminDashboardKaori() {
     }
   };
 
-  const filtrados = productos.filter(
+  const filtradosLocal = productos.filter(
     (p) => !busqueda || p.nombre.toLowerCase().includes(busqueda.toLowerCase()),
   );
-
-  const totalConsultas = productos.reduce((s, p) => s + (p.consultas ?? 0), 0);
-  const totalInventario = productos.reduce((s, p) => s + Number(p.precio), 0);
-  const masConsultado = [...productos].sort(
-    (a, b) => (b.consultas ?? 0) - (a.consultas ?? 0),
-  )[0];
 
   return (
     <div className="min-h-screen bg-[#080808] text-white font-sans">
@@ -345,23 +386,18 @@ export default function AdminDashboardKaori() {
             </div>
           </div>
           <nav className="flex items-center gap-1">
-            {(["inventario", "agregar"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() =>
-                  tab === "inventario"
-                    ? cancelarEdicion()
-                    : setSeccion("agregar")
-                }
-                className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${seccion === tab ? "bg-white/10 text-white" : "text-gray-600 hover:text-gray-400"}`}
-              >
-                {tab === "inventario"
-                  ? "Inventario"
-                  : idEditando
-                    ? "✏️ Editando"
-                    : "+ Agregar"}
-              </button>
-            ))}
+            <button
+              onClick={cancelarEdicion}
+              className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${seccion === "inventario" ? "bg-white/10 text-white" : "text-gray-600"}`}
+            >
+              Inventario
+            </button>
+            <button
+              onClick={() => setSeccion("agregar")}
+              className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${seccion === "agregar" ? "bg-white/10 text-white" : "text-gray-600"}`}
+            >
+              {idEditando ? "✏️ Editando" : "+ Agregar"}
+            </button>
           </nav>
           <Link
             href="/"
@@ -373,32 +409,32 @@ export default function AdminDashboardKaori() {
       </header>
 
       <main className="max-w-7xl mx-auto px-5 py-8 space-y-10">
+        {/* STAT CARDS DINÁMICOS GLOBALES */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label="Productos"
-            value={productos.length}
+            value={totalItems}
             accent
             icon="📦"
+            sub="Total en tienda"
           />
           <StatCard
-            label="Valor total"
-            value={`Bs ${totalInventario.toFixed(0)}`}
+            label="Capital Total"
+            value={`Bs ${statsTotales.dinero.toLocaleString()}`}
             icon="💰"
+            sub="Valor total stock"
           />
           <StatCard
-            label="Con descuento"
-            value={productos.filter((p) => p.descuento).length}
+            label="Ofertas"
+            value={statsTotales.descuentos}
             icon="🏷️"
+            sub="Artículos rebajados"
           />
           <StatCard
             label="Consultas"
-            value={totalConsultas}
-            sub={
-              masConsultado && (masConsultado.consultas ?? 0) > 0
-                ? `Top: ${masConsultado.nombre.slice(0, 15)}...`
-                : ""
-            }
+            value={statsTotales.consultas}
             icon="💬"
+            sub="Clicks totales"
           />
         </div>
 
@@ -411,27 +447,39 @@ export default function AdminDashboardKaori() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-6"
             >
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em]">
-                  Inventario activo — {filtrados.length} productos
-                </h2>
-                <div className="flex gap-3 w-full sm:w-auto">
-                  <div className="flex-1 sm:w-56 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 text-sm">
-                      🔍
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Buscar producto..."
-                      value={busqueda}
-                      onChange={(e) => setBusqueda(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/8 rounded-xl text-sm outline-none focus:border-orange-500/50 transition-all text-gray-300"
-                    />
-                  </div>
+              {/* FILTROS Y BÚSQUEDA */}
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-[#111] p-4 rounded-[2rem] border border-white/5">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
+                  {OPCIONES_CATEGORIA.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setFiltroCategoria(cat.id);
+                        setPaginaActual(0);
+                      }}
+                      className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${filtroCategoria === cat.id ? "bg-orange-600 border-transparent text-white" : "bg-white/5 border-white/5 text-gray-500"}`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative w-full md:w-64">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 text-sm">
+                    🔍
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Buscar en esta página..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/8 rounded-xl text-sm outline-none focus:border-orange-500/50 text-gray-300"
+                  />
                 </div>
               </div>
+
+              {/* GRID */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filtrados.map((p) => (
+                {filtradosLocal.map((p) => (
                   <TarjetaInventario
                     key={p.id}
                     producto={p}
@@ -439,6 +487,38 @@ export default function AdminDashboardKaori() {
                     onEliminar={eliminarProducto}
                   />
                 ))}
+              </div>
+
+              {/* PAGINACIÓN */}
+              <div className="flex justify-center items-center gap-8 pt-10">
+                <button
+                  disabled={paginaActual === 0}
+                  onClick={() => {
+                    setPaginaActual((p) => p - 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="px-8 py-3 bg-white/5 border border-white/5 rounded-2xl font-black text-[10px] uppercase text-gray-500 disabled:opacity-10 active:scale-95 transition-all"
+                >
+                  ← Anterior
+                </button>
+                <div className="flex flex-col items-center">
+                  <span className="text-orange-500 font-black italic">
+                    Pág. {paginaActual + 1}
+                  </span>
+                  <span className="text-[8px] text-gray-600 uppercase font-bold tracking-widest text-center">
+                    de {Math.ceil(totalItems / ITEMS_POR_PAGINA) || 1}
+                  </span>
+                </div>
+                <button
+                  disabled={(paginaActual + 1) * ITEMS_POR_PAGINA >= totalItems}
+                  onClick={() => {
+                    setPaginaActual((p) => p + 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="px-8 py-3 bg-white/5 border border-white/5 rounded-2xl font-black text-[10px] uppercase text-gray-500 disabled:opacity-10 active:scale-95 transition-all"
+                >
+                  Siguiente →
+                </button>
               </div>
             </motion.div>
           )}
@@ -471,6 +551,30 @@ export default function AdminDashboardKaori() {
                           required
                         />
                       </Campo>
+                      <Campo label="Sección / Categoría">
+                        <div className="relative">
+                          <select
+                            value={form.categoria}
+                            onChange={(e) =>
+                              setForm({ ...form, categoria: e.target.value })
+                            }
+                            className={`${inputCls} cursor-pointer`}
+                          >
+                            {OPCIONES_CATEGORIA.map((opt) => (
+                              <option
+                                key={opt.id}
+                                value={opt.id}
+                                className="bg-[#111] text-white"
+                              >
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                            ▼
+                          </div>
+                        </div>
+                      </Campo>
                       <div className="grid grid-cols-2 gap-4">
                         <Campo label="Precio (Bs)">
                           <input
@@ -486,6 +590,7 @@ export default function AdminDashboardKaori() {
                         <Campo label="Descuento">
                           <input
                             type="text"
+                            placeholder="Ej: 20%"
                             value={form.descuento}
                             onChange={(e) =>
                               setForm({ ...form, descuento: e.target.value })
@@ -533,6 +638,18 @@ export default function AdminDashboardKaori() {
                           className="w-full text-xs text-gray-500 file:bg-gray-700 file:border-none file:px-4 file:py-2 file:rounded-xl file:text-white"
                         />
                       </Campo>
+                      {(form.imagen || idEditando) && (
+                        <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                          <p className="text-[9px] font-black uppercase text-gray-600 mb-2">
+                            Imagen Actual
+                          </p>
+                          <img
+                            src={form.imagen}
+                            className="h-20 w-20 object-cover rounded-lg border border-white/10"
+                            alt="Preview"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-4 pt-2 border-t border-white/5">
@@ -544,8 +661,8 @@ export default function AdminDashboardKaori() {
                       {subiendo
                         ? "Procesando..."
                         : idEditando
-                          ? "Guardar"
-                          : "Publicar"}
+                          ? "Guardar Cambios"
+                          : "Publicar Ahora"}
                     </button>
                     <button
                       type="button"

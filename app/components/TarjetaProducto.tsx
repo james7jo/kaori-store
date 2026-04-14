@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ⭐ Rating
 function StarRating({ score }: { score: number }) {
@@ -22,14 +22,36 @@ function StarRating({ score }: { score: number }) {
 
 export default function TarjetaProducto({ producto, onClick }: any) {
   const [loaded, setLoaded] = useState(false);
+  const [consultas, setConsultas] = useState(producto.consultas || 0);
 
-  // ⭐ cada 5 ventas = sube estrella
+  // ⭐ rating por ventas (cada 5 ventas)
+  const vendidosCalculados = Math.max(
+    0,
+    (producto.stockInicial || 0) - (producto.stock || 0),
+  );
+
   const rating = Math.max(
     1,
-    Math.min(5, Math.floor((producto.vendidos || 0) / 5) + 1),
+    Math.min(5, Math.floor(vendidosCalculados / 5) + 1),
   );
 
   const tieneDescuento = producto.descuento && producto.descuento !== "";
+
+  // 🔥 CARGAR consultas guardadas
+  useEffect(() => {
+    const saved = localStorage.getItem(`consultas_${producto.id}`);
+    if (saved) {
+      setConsultas(parseInt(saved));
+    }
+  }, [producto.id]);
+
+  // 🔥 SUMAR CONSULTA (click)
+  const handleClick = () => {
+    const nuevas = consultas + 1;
+    setConsultas(nuevas);
+    localStorage.setItem(`consultas_${producto.id}`, nuevas.toString());
+    onClick();
+  };
 
   // 🧠 BADGE INTELIGENTE
   const getBadge = () => {
@@ -40,14 +62,14 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       };
     }
 
-    if ((producto.vendidos || 0) > 30) {
+    if (vendidosCalculados > 20) {
       return {
         text: "🔥 Top ventas",
         style: "bg-orange-500/10 border-orange-500/30 text-orange-400",
       };
     }
 
-    if ((producto.vendidos || 0) < 5) {
+    if (vendidosCalculados < 3) {
       return {
         text: "🆕 Nuevo",
         style: "bg-blue-500/10 border-blue-500/30 text-blue-400",
@@ -71,7 +93,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
   return (
     <motion.div
-      onClick={onClick}
+      onClick={handleClick}
       whileTap={{ scale: 0.95 }}
       whileHover={{ y: -4 }}
       className="relative bg-[#0e0e0e] rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
@@ -148,26 +170,29 @@ export default function TarjetaProducto({ producto, onClick }: any) {
             </div>
           </div>
 
-          {/* Badge dinámico */}
+          {/* Badge */}
           <div className={`px-2 py-[2px] rounded-md border ${badge.style}`}>
             <span className="text-[8px] font-bold uppercase">{badge.text}</span>
           </div>
         </div>
 
-        {/* RATING */}
+        {/* RATING + DATOS */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 bg-white/5 px-2 py-[2px] rounded-md">
             <StarRating score={rating} />
             <span className="text-[10px] text-gray-400">{rating}.0</span>
           </div>
 
-          <span className="text-[10px] text-gray-500">
-            {producto.vendidos ?? 0} vendidos
-          </span>
+          {/* CONSULTAS + VENDIDOS */}
+          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+            <span>💬 {consultas}</span>
+            <span>•</span>
+            <span>🛒 {vendidosCalculados}</span>
+          </div>
         </div>
       </div>
 
-      {/* Borde hover */}
+      {/* BORDE */}
       <div className="absolute inset-0 rounded-2xl border border-orange-500/0 group-hover:border-orange-500/20 transition pointer-events-none" />
     </motion.div>
   );

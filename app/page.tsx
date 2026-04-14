@@ -9,22 +9,23 @@ import ModalDetalle from "./components/ModalDetalle";
 export default function CatalogoKaori() {
   const [productos, setProductos] = useState<any[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [categoriaSel, setCategoriaSel] = useState("Todo");
+  const [soloOfertas, setSoloOfertas] = useState(false);
   const [sel, setSel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [carrito, setCarrito] = useState<any[]>([]);
-  const [soloOfertas, setSoloOfertas] = useState(false);
 
-  // 1. EFECTO PARA DETECTAR EL BOTÓN ATRÁS DEL CELULAR
-  useEffect(() => {
-    const manejarBotonAtras = () => {
-      if (sel) {
-        setSel(null);
-      }
-    };
-
-    window.addEventListener("popstate", manejarBotonAtras);
-    return () => window.removeEventListener("popstate", manejarBotonAtras);
-  }, [sel]);
+  // ─── CATEGORÍAS BIEN BOLIVIANAS Y ORDENADAS ───
+  const categoriasConfig = [
+    { id: "Todo", icon: "✨", label: "Todo" },
+    { id: "Tecno", icon: "🎧", label: "Tecnologia y Accesorios" },
+    { id: "Electro", icon: "🏠", label: "Electrodomésticos" },
+    { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
+    { id: "PDF", icon: "📑", label: "Libros y PDFs" },
+    { id: "Digital", icon: "🎮", label: "Juegos y Licencias" },
+    { id: "Outlet", icon: "💎", label: "Ofertas Outlet" },
+  ];
 
   useEffect(() => {
     async function cargarProductos() {
@@ -38,208 +39,340 @@ export default function CatalogoKaori() {
     cargarProductos();
   }, []);
 
-  // 2. FUNCIÓN PARA ABRIR PRODUCTO (Crea un estado en el historial)
+  const productosFiltrados = productos.filter((p) => {
+    const coincideBusqueda = p.nombre
+      .toLowerCase()
+      .includes(busqueda.toLowerCase());
+    const coincideOferta = !soloOfertas || (p.descuento && p.descuento !== "");
+    const coincideCat =
+      categoriaSel === "Todo" ||
+      p.descripcion?.toLowerCase().includes(categoriaSel.toLowerCase()) ||
+      p.nombre?.toLowerCase().includes(categoriaSel.toLowerCase());
+    return coincideBusqueda && coincideCat && coincideOferta;
+  });
+
   const abrirProducto = (p: any) => {
     setSel(p);
     window.history.pushState({ modalOpen: true }, "");
   };
 
-  // 3. FUNCIÓN PARA CERRAR PRODUCTO (Limpia el historial si es necesario)
   const cerrarProducto = () => {
     setSel(null);
-    if (window.history.state?.modalOpen) {
-      window.history.back();
-    }
-  };
-
-  // FILTRADO MAESTRO: Por búsqueda y por pestaña de Ofertas
-  const productosFiltrados = productos.filter((p) => {
-    const coincideBusqueda = p.nombre
-      .toLowerCase()
-      .includes(busqueda.toLowerCase());
-    if (soloOfertas) {
-      return coincideBusqueda && p.descuento !== null && p.descuento !== "";
-    }
-    return coincideBusqueda;
-  });
-
-  const agregarAlCarrito = (p: any) => {
-    setCarrito([...carrito, p]);
-    setSel(null);
+    if (window.history.state?.modalOpen) window.history.back();
   };
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#080808] flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-orange-500 font-black animate-pulse italic text-xl tracking-[0.3em] uppercase">
-          Kaori Store
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <p className="text-orange-500 font-black animate-pulse italic tracking-[0.3em] uppercase">
+          KAORI STORE
         </p>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#080808] pb-32 font-sans text-white overflow-x-hidden">
-      {/* HEADER PREMIUM DARK */}
-      <div className="sticky top-0 bg-[#080808]/80 backdrop-blur-xl z-30 border-b border-white/5 shadow-2xl">
-        <div className="p-4 flex justify-between items-center">
-          <Link href="/admin">
-            <div className="flex flex-col">
-              <h1
-                translate="no"
-                className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent uppercase"
-              >
-                KAORI STORE
-              </h1>
-              <span className="text-[8px] font-bold tracking-[0.4em] text-gray-500 -mt-1 uppercase">
-                Ventas Seguras
-              </span>
-            </div>
-          </Link>
-          <button className="relative p-3 bg-white/5 rounded-2xl active:scale-90 transition-all border border-white/10">
+    <div className="min-h-screen bg-[#080808] text-white font-sans pb-40 overflow-x-hidden">
+      {/* ─── SIDEBAR PREMIUM ─── */}
+      <AnimatePresence>
+        {menuAbierto && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuAbierto(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-[#0d0d0d] z-[70] border-r border-white/5 p-6 shadow-2xl flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="font-black italic text-xl text-orange-500 uppercase tracking-tighter leading-none">
+                    Kaori Menu
+                  </h2>
+                  <p className="text-[7px] text-gray-600 font-bold uppercase tracking-[0.4em] mt-1">
+                    Explora nuestra tienda
+                  </p>
+                </div>
+                <button
+                  onClick={() => setMenuAbierto(false)}
+                  className="w-10 h-10 bg-white/5 rounded-2xl text-gray-500 flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-1.5 overflow-y-auto flex-1 no-scrollbar">
+                <p className="text-[8px] font-black text-gray-700 uppercase tracking-[0.3em] mb-3 ml-2">
+                  Categorías
+                </p>
+                {categoriasConfig.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setCategoriaSel(cat.id);
+                      setSoloOfertas(false);
+                      setMenuAbierto(false);
+                    }}
+                    className={`w-full flex items-center gap-4 p-3.5 rounded-2xl transition-all border ${
+                      categoriaSel === cat.id && !soloOfertas
+                        ? "bg-gradient-to-r from-orange-600 to-red-600 border-transparent text-white font-black shadow-lg shadow-orange-900/40"
+                        : "bg-[#121212]/50 text-gray-400 border-white/5"
+                    }`}
+                  >
+                    <span className="text-lg">{cat.icon}</span>
+                    <span className="text-[10px] uppercase font-black italic tracking-wider">
+                      {cat.label}
+                    </span>
+                  </button>
+                ))}
+
+                {/* CARRITO INTERNO */}
+                <div className="mt-6 pt-6 border-t border-white/5">
+                  <p className="text-[8px] font-black text-gray-700 uppercase tracking-[0.3em] mb-3 ml-2">
+                    Tu Bolsa
+                  </p>
+                  <button className="w-full flex justify-between items-center p-4 rounded-[1.5rem] bg-orange-600/10 border border-orange-600/20 group">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">🛒</span>
+                      <div className="text-left">
+                        <p className="text-[10px] font-black text-white uppercase italic leading-none">
+                          Mi Carrito
+                        </p>
+                        <p className="text-[8px] text-orange-500 font-bold mt-1 uppercase tracking-widest">
+                          {carrito.length} Artículos
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-gray-500 group-hover:translate-x-1 transition-transform">
+                      →
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* CONTACTO Y REDES */}
+              <div className="pt-4 space-y-3 mt-4 border-t border-white/5">
+                <a
+                  href="https://wa.me/59174244882?text=¡Hola! 👋 Vi la tienda, quería hacer una consulta."
+                  target="_blank"
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-[1.5rem] border border-white/10 active:scale-95 transition-all"
+                >
+                  <div>
+                    <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-0.5">
+                      Escríbenos
+                    </p>
+                    <p className="text-[11px] text-white font-black italic uppercase">
+                      WhatsApp Directo
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 bg-[#25D366]/20 rounded-full flex items-center justify-center text-[#25D366]">
+                    💬
+                  </div>
+                </a>
+
+                <div className="flex gap-2">
+                  <div className="flex-1 p-3 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center opacity-30">
+                    <span className="text-lg">📸</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-white mt-1">
+                      Instagram
+                    </span>
+                  </div>
+                  <a
+                    href="https://www.tiktok.com/@kaori.han?_r=1&_t=ZS-95XiQ3gI9e4"
+                    target="_blank"
+                    className="flex-1 p-3 bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center active:scale-95 transition-all"
+                  >
+                    <span className="text-lg">🎵</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-white mt-1">
+                      TikTok
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ─── HEADER ─── */}
+      <div className="p-4 flex justify-between items-center bg-[#080808] sticky top-0 z-40">
+        <div className="flex flex-col">
+          <h1
+            translate="no"
+            className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent uppercase leading-none"
+          >
+            KAORI STORE
+          </h1>
+          <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest mt-1">
+            Premium Experience
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMenuAbierto(true)}
+            className="p-3 bg-[#121212] rounded-2xl border border-white/5 text-orange-500 shadow-xl"
+          >
+            ☰
+          </button>
+          <button className="relative p-3 bg-[#121212] rounded-2xl border border-white/5">
             <span className="text-xl">🛒</span>
             {carrito.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-600 to-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black border-2 border-[#080808]">
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black border-2 border-[#080808]">
                 {carrito.length}
               </span>
             )}
           </button>
         </div>
-
-        {/* BUSCADOR ESTILO INDUSTRIAL */}
-        <div className="px-4 pb-4">
-          <div className="relative flex items-center bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-orange-500/50 transition-all shadow-inner">
-            <span className="text-gray-500 mr-2 text-lg">🔍</span>
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="bg-transparent outline-none text-sm w-full text-gray-200 font-medium placeholder-gray-600"
-            />
-            {busqueda && (
-              <button
-                onClick={() => setBusqueda("")}
-                className="text-gray-400 bg-white/10 rounded-full w-6 h-6 flex items-center justify-center text-xs"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* SECCIÓN DINÁMICA */}
-      <div className="p-5">
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">
-              {soloOfertas
-                ? "🔥 Super Ofertas"
-                : busqueda
-                  ? "Resultados"
-                  : "Explorar"}
-            </h2>
-            <div className="h-1 w-12 bg-orange-600 rounded-full mt-1"></div>
-          </div>
-          <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
-            {productosFiltrados.length} Items
-          </span>
-        </div>
-
-        {productosFiltrados.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {productosFiltrados.map((p) => (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                key={p.id}
-              >
-                <TarjetaProducto
-                  producto={p}
-                  onClick={() => abrirProducto(p)}
-                />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-24 flex flex-col items-center">
-            <div className="text-6xl mb-4 opacity-20 text-orange-600">📦</div>
-            <p className="text-gray-500 font-black uppercase tracking-widest">
-              No hay artículos disponibles
-            </p>
-            {soloOfertas && (
-              <button
-                onClick={() => setSoloOfertas(false)}
-                className="mt-4 text-orange-500 text-xs font-bold underline"
-              >
-                Ver todo el catálogo
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* MODAL Y DETALLE */}
-      <AnimatePresence>
-        {sel && (
-          <ModalDetalle
-            producto={sel}
-            onClose={cerrarProducto}
-            onAgregar={agregarAlCarrito}
+      {/* ─── BUSCADOR ─── */}
+      <div className="px-4 mb-6 mt-2">
+        <div className="bg-[#151515] rounded-2xl flex items-center px-5 py-4 border border-white/5 shadow-2xl focus-within:border-orange-500/40 transition-all">
+          <span className="text-gray-600 mr-3 text-lg">🔍</span>
+          <input
+            type="text"
+            placeholder="Busca productos, libros o licencias..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="bg-transparent outline-none text-sm w-full text-gray-300 font-medium placeholder-gray-800"
           />
-        )}
-      </AnimatePresence>
+        </div>
+      </div>
 
-      {/* WHATSAPP FLOTANTE CON GLOW */}
-      <a
-        href="https://wa.me/59174244882"
-        target="_blank"
-        className="fixed bottom-28 right-6 bg-[#25D366] w-14 h-14 rounded-full shadow-[0_0_30px_rgba(37,211,102,0.4)] flex items-center justify-center text-white text-2xl z-40 border-4 border-[#080808] active:scale-90 transition-all"
-      >
-        <span className="animate-pulse">💬</span>
-      </a>
+      {/* ─── CHIPS HORIZONTALES ─── */}
+      <div className="flex gap-3 overflow-x-auto px-4 mb-10 no-scrollbar scroll-smooth">
+        {categoriasConfig.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => {
+              setCategoriaSel(cat.id);
+              setSoloOfertas(false);
+            }}
+            className={`px-6 py-3 rounded-2xl text-[10px] font-black italic uppercase transition-all flex-shrink-0 border shadow-md ${categoriaSel === cat.id && !soloOfertas ? "bg-orange-600 border-transparent text-white scale-105" : "bg-[#121212] border-white/5 text-gray-500"}`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
 
-      {/* NAVBAR INFERIOR FUTURISTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#080808]/90 backdrop-blur-2xl border-t border-white/10 p-4 flex justify-around items-center z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] rounded-t-[2.5rem]">
+      {/* ─── LISTADO ─── */}
+      <div className="px-5 flex justify-between items-end mb-8">
+        <div>
+          <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.4em] mb-1">
+            {soloOfertas ? "Exclusivo" : "Catálogo"}
+          </p>
+          <h2 className="text-2xl font-black italic uppercase tracking-tighter text-gray-100 leading-none">
+            {soloOfertas
+              ? "Super Ofertas"
+              : categoriaSel === "Todo"
+                ? "Novedades"
+                : categoriasConfig.find((c) => c.id === categoriaSel)?.label}
+          </h2>
+        </div>
+        <div className="bg-white/5 px-4 py-1.5 rounded-full border border-white/5 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+          {productosFiltrados.length} Items
+        </div>
+      </div>
+
+      <div className="px-4 grid grid-cols-2 gap-5">
+        {productosFiltrados.map((p) => (
+          <TarjetaProducto
+            key={p.id}
+            producto={p}
+            onClick={() => abrirProducto(p)}
+          />
+        ))}
+      </div>
+
+      {/* ─── NAVBAR INFERIOR PREMIUM ─── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#080808]/95 backdrop-blur-2xl border-t border-white/5 px-4 py-5 flex justify-around items-center z-50 rounded-t-[3rem] shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
         <button
           onClick={() => {
+            setCategoriaSel("Todo");
             setSoloOfertas(false);
             setBusqueda("");
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className={`flex flex-col items-center transition-all ${!soloOfertas ? "text-orange-500 scale-110" : "text-gray-600 hover:text-gray-400"}`}
+          className={`flex flex-col items-center gap-1.5 transition-all ${categoriaSel === "Todo" && !soloOfertas ? "text-orange-500 scale-110" : "text-gray-600"}`}
         >
-          <span className="text-2xl">🏠</span>
-          <span className="text-[9px] font-black uppercase tracking-tighter mt-1">
+          <span className="text-2xl">
+            {categoriaSel === "Todo" && !soloOfertas ? "🏠" : "🏚️"}
+          </span>
+          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
             Inicio
           </span>
         </button>
 
         <button
-          onClick={() => setSoloOfertas(true)}
-          className={`flex flex-col items-center transition-all ${soloOfertas ? "text-red-500 scale-110" : "text-gray-600 hover:text-gray-400"}`}
+          onClick={() => {
+            setSoloOfertas(true);
+            setCategoriaSel("Todo");
+          }}
+          className={`flex flex-col items-center gap-1.5 transition-all ${soloOfertas ? "text-red-500 scale-110" : "text-gray-600"}`}
         >
           <span className="text-2xl relative">
-            🔥
-            {productos.some((p) => p.descuento) && !soloOfertas && (
+            🔥{" "}
+            {productos.some((p) => p.descuento) && (
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full animate-ping"></span>
             )}
           </span>
-          <span className="text-[9px] font-black uppercase tracking-tighter mt-1">
+          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
             Ofertas
+          </span>
+        </button>
+
+        <button
+          onClick={() => setMenuAbierto(true)}
+          className="relative flex flex-col items-center"
+        >
+          <div className="bg-gradient-to-tr from-orange-600 to-red-600 p-4 rounded-2xl -mt-12 shadow-[0_10px_20px_rgba(234,88,12,0.4)] border-4 border-[#080808] text-white text-2xl">
+            ⚡
+          </div>
+          <span className="text-[7px] font-black uppercase tracking-[0.2em] mt-2 text-orange-500">
+            Explorar
+          </span>
+        </button>
+
+        <button className="flex flex-col items-center gap-1.5 text-gray-600">
+          <span className="text-2xl relative">
+            🛒{" "}
+            {carrito.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-white text-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-black">
+                {carrito.length}
+              </span>
+            )}
+          </span>
+          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
+            Carrito
           </span>
         </button>
 
         <Link
           href="/admin"
-          className="flex flex-col items-center text-gray-600 hover:text-gray-400 transition-all"
+          className="flex flex-col items-center gap-1.5 text-gray-600"
         >
           <span className="text-2xl">👤</span>
-          <span className="text-[9px] font-black uppercase tracking-tighter mt-1">
+          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
             Admin
           </span>
         </Link>
       </div>
+
+      <AnimatePresence>
+        {sel && (
+          <ModalDetalle
+            producto={sel}
+            onClose={cerrarProducto}
+            onAgregar={(p) => setCarrito([...carrito, p])}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
