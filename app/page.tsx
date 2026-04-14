@@ -249,34 +249,42 @@ export default function CatalogoKaori() {
         </div>
       </div>
 
-      {/* ─── BUSCADOR ─── */}
-      <div className="px-4 mb-6 mt-2">
-        <div className="bg-[#151515] rounded-2xl flex items-center px-5 py-4 border border-white/5 shadow-2xl focus-within:border-orange-500/40 transition-all">
-          <span className="text-gray-600 mr-3 text-lg">🔍</span>
-          <input
-            type="text"
-            placeholder="Busca productos, libros o licencias..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="bg-transparent outline-none text-sm w-full text-gray-300 font-medium placeholder-gray-800"
-          />
+      {/* ─── CONTENEDOR FIJO (BUSCADOR + CHIPS) ─── */}
+      {/* Este bloque se queda arriba al bajar (sticky) // NO QUITAR */}
+      <div className="sticky top-[72px] z-30 bg-[#080808]/80 backdrop-blur-xl pb-4 pt-2">
+        {/* ─── BUSCADOR ─── */}
+        <div className="px-4 mb-4">
+          <div className="bg-[#151515] rounded-2xl flex items-center px-5 py-4 border border-white/5 shadow-2xl focus-within:border-orange-500/40 transition-all">
+            <span className="text-gray-600 mr-3 text-lg">🔍</span>
+            <input
+              type="text"
+              placeholder="Busca productos, libros o licencias..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="bg-transparent outline-none text-sm w-full text-gray-300 font-medium placeholder-gray-800"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* ─── CHIPS HORIZONTALES ─── */}
-      <div className="flex gap-3 overflow-x-auto px-4 mb-10 no-scrollbar scroll-smooth">
-        {categoriasConfig.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => {
-              setCategoriaSel(cat.id);
-              setSoloOfertas(false);
-            }}
-            className={`px-6 py-3 rounded-2xl text-[10px] font-black italic uppercase transition-all flex-shrink-0 border shadow-md ${categoriaSel === cat.id && !soloOfertas ? "bg-orange-600 border-transparent text-white scale-105" : "bg-[#121212] border-white/5 text-gray-500"}`}
-          >
-            {cat.label}
-          </button>
-        ))}
+        {/* ─── CHIPS HORIZONTALES ─── */}
+        <div className="flex gap-3 overflow-x-auto px-4 no-scrollbar scroll-smooth">
+          {categoriasConfig.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setCategoriaSel(cat.id);
+                setSoloOfertas(false);
+              }}
+              className={`px-6 py-3 rounded-2xl text-[10px] font-black italic uppercase transition-all flex-shrink-0 border shadow-md ${
+                categoriaSel === cat.id && !soloOfertas
+                  ? "bg-orange-600 border-transparent text-white scale-105"
+                  : "bg-[#121212] border-white/5 text-gray-500"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ─── LISTADO ─── */}
