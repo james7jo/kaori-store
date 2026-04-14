@@ -110,9 +110,9 @@ export default function CatalogoKaori() {
             >
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h2 className="font-black italic text-xl text-orange-500 uppercase tracking-tighter leading-none">
-                    Kaori Menu
-                  </h2>
+                  <p className="text-orange-500 font-black animate-pulse italic tracking-[0.3em] uppercase">
+                    KAORI STORE
+                  </p>
                   <p className="text-[7px] text-gray-600 font-bold uppercase tracking-[0.4em] mt-1">
                     Explora nuestra tienda
                   </p>
@@ -308,8 +308,9 @@ export default function CatalogoKaori() {
         ))}
       </div>
 
-      {/* ─── NAVBAR INFERIOR PREMIUM ─── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#080808]/95 backdrop-blur-2xl border-t border-white/5 px-4 py-5 flex justify-around items-center z-50 rounded-t-[3rem] shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
+      {/* ─── NAVBAR INFERIOR PREMIUM ARREGLADO (SIMÉTRICO) ─── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#080808]/95 backdrop-blur-2xl border-t border-white/5 px-2 py-4 flex items-end justify-center z-50 rounded-t-[2.5rem] shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
+        {/* INICIO */}
         <button
           onClick={() => {
             setCategoriaSel("Todo");
@@ -317,66 +318,70 @@ export default function CatalogoKaori() {
             setBusqueda("");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className={`flex flex-col items-center gap-1.5 transition-all ${categoriaSel === "Todo" && !soloOfertas ? "text-orange-500 scale-110" : "text-gray-600"}`}
+          className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${categoriaSel === "Todo" && !soloOfertas ? "text-orange-500 scale-110" : "text-gray-600"}`}
         >
           <span className="text-2xl">
             {categoriaSel === "Todo" && !soloOfertas ? "🏠" : "🏚️"}
           </span>
-          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
+          <span className="text-[7px] font-black uppercase tracking-[0.1em] text-center w-full">
             Inicio
           </span>
         </button>
 
+        {/* OFERTAS */}
         <button
           onClick={() => {
             setSoloOfertas(true);
             setCategoriaSel("Todo");
           }}
-          className={`flex flex-col items-center gap-1.5 transition-all ${soloOfertas ? "text-red-500 scale-110" : "text-gray-600"}`}
+          className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${soloOfertas ? "text-red-500 scale-110" : "text-gray-600"}`}
         >
-          <span className="text-2xl relative">
-            🔥{" "}
+          <span className="text-2xl relative flex items-center justify-center">
+            🔥
             {productos.some((p) => p.descuento) && (
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full animate-ping"></span>
             )}
           </span>
-          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
+          <span className="text-[7px] font-black uppercase tracking-[0.1em] text-center w-full">
             Ofertas
           </span>
         </button>
 
+        {/* EXPLORAR (EL CORAZÓN DEL NAV) */}
         <button
           onClick={() => setMenuAbierto(true)}
-          className="relative flex flex-col items-center"
+          className="w-1/5 flex flex-col items-center justify-center relative"
         >
-          <div className="bg-gradient-to-tr from-orange-600 to-red-600 p-4 rounded-2xl -mt-12 shadow-[0_10px_20px_rgba(234,88,12,0.4)] border-4 border-[#080808] text-white text-2xl">
-            ⚡
+          <div className="bg-gradient-to-tr from-orange-600 to-red-600 p-3.5 rounded-2xl -mt-10 shadow-[0_10px_20px_rgba(234,88,12,0.4)] border-4 border-[#080808] text-white flex items-center justify-center active:scale-90 transition-transform">
+            <span className="text-2xl">⚡</span>
           </div>
-          <span className="text-[7px] font-black uppercase tracking-[0.2em] mt-2 text-orange-500">
+          <span className="text-[7px] font-black uppercase tracking-[0.1em] mt-2 text-orange-500 text-center w-full">
             Explorar
           </span>
         </button>
 
-        <button className="flex flex-col items-center gap-1.5 text-gray-600">
-          <span className="text-2xl relative">
-            🛒{" "}
+        {/* CARRITO */}
+        <button className="w-1/5 flex flex-col items-center justify-center gap-1 text-gray-600">
+          <span className="text-2xl relative flex items-center justify-center">
+            🛒
             {carrito.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-white text-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-black">
                 {carrito.length}
               </span>
             )}
           </span>
-          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
+          <span className="text-[7px] font-black uppercase tracking-[0.1em] text-center w-full">
             Carrito
           </span>
         </button>
 
+        {/* ADMIN */}
         <Link
           href="/admin"
-          className="flex flex-col items-center gap-1.5 text-gray-600"
+          className="w-1/5 flex flex-col items-center justify-center gap-1 text-gray-600"
         >
-          <span className="text-2xl">👤</span>
-          <span className="text-[7px] font-black uppercase tracking-[0.2em]">
+          <span className="text-2xl flex items-center justify-center">👤</span>
+          <span className="text-[7px] font-black uppercase tracking-[0.1em] text-center w-full">
             Admin
           </span>
         </Link>
