@@ -52,9 +52,12 @@ export default function CatalogoKaori() {
         <div className="p-4 flex justify-between items-center">
           <Link href="/admin">
             <div className="flex flex-col">
-              <h1 className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent uppercase">
-                KAORI STORE
-              </h1>
+              <h1 
+  translate="no" 
+  className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent uppercase"
+>
+  KAORI STORE
+</h1>
               <span className="text-[8px] font-bold tracking-[0.4em] text-gray-500 -mt-1 uppercase">Ventas Seguras</span>
             </div>
           </Link>
