@@ -37,7 +37,7 @@ export default function CatalogoKaori() {
 
   // ─── CATEGORÍAS BIEN BOLIVIANAS Y ORDENADAS ─── // NO QUITAR
   const categoriasConfig = [
-    { id: "Todo", icon: "✨", label: "Todo el Stock" },
+    { id: "Todo", icon: "✨", label: "Novedades" },
     { id: "Tecno", icon: "🎧", label: "Tecnología y Accesorios" },
     { id: "Electro", icon: "🏠", label: "Electrodomésticos" },
     { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
@@ -154,36 +154,41 @@ export default function CatalogoKaori() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMenuAbierto(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-[#1F2937]/40 backdrop-blur-sm z-[60]"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              // FONDO SIDEBAR: Blanco puro para resaltar
-              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white z-[70] border-r border-[#F97316]/10 p-6 shadow-2xl flex flex-col rounded-r-3xl"
+              // FONDO TRANSPARENTE CON DESENFOQUE (GLASSMORPHISM)
+              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white/80 backdrop-blur-2xl z-[70] border-r-8 border-[#F97316] p-6 shadow-2xl flex flex-col rounded-r-[3rem]"
             >
-              <div className="flex justify-between items-center mb-10 border-b border-gray-100 pb-5">
-                <div>
-                  <p className="text-[#F97316] font-black italic text-2xl uppercase tracking-tighter">
-                    KAORI STORE
-                  </p>
-                  <p className="text-[7px] text-gray-500 font-bold uppercase tracking-[0.4em] mt-1">
-                    Calidad Garantizada
-                  </p>
+              {/* LOGO IMPACTANTE */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex flex-col">
+                  <h1
+                    translate="no"
+                    className="text-3xl font-[1000] italic tracking-[-0.05em] uppercase leading-none text-[#1F2937]"
+                  >
+                    KAORI{" "}
+                    <span className="text-[#F97316] drop-shadow-[0_0_10px_rgba(249,115,22,0.4)]">
+                      STORE
+                    </span>
+                  </h1>
                 </div>
                 <button
                   onClick={() => setMenuAbierto(false)}
-                  className="w-10 h-10 bg-gray-100 rounded-2xl text-gray-500 flex items-center justify-center active:scale-90 transition-transform"
+                  className="w-10 h-10 bg-white/50 rounded-2xl text-[#F97316] flex items-center justify-center shadow-sm border border-white/20 active:scale-90"
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="space-y-1.5 overflow-y-auto flex-1 no-scrollbar pt-2">
-                <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] mb-4 ml-2">
-                  EXPLORAR CATEGORÍAS
+              {/* LISTADO SIN SCROLL */}
+              <div className="flex-1 flex flex-col gap-1.5 pt-2">
+                <p className="text-[9px] font-black text-[#F97316] uppercase tracking-[0.4em] mb-2 ml-2">
+                  Explorar
                 </p>
                 {categoriasConfig.map((cat) => (
                   <button
@@ -193,57 +198,69 @@ export default function CatalogoKaori() {
                       setSoloOfertas(false);
                       setMenuAbierto(false);
                     }}
-                    className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all border ${
+                    className={`w-full flex items-center gap-4 p-4 rounded-[1.8rem] transition-all border-2 ${
                       categoriaSel === cat.id && !soloOfertas
-                        ? "bg-[#F97316] border-transparent text-white font-black shadow-lg shadow-orange-500/20 scale-[1.02]"
-                        : "bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100 hover:border-[#F97316]/30"
+                        ? "bg-[#F97316] border-transparent text-white font-black shadow-[0_15px_30px_rgba(249,115,22,0.3)] scale-[1.03]"
+                        : "bg-white/40 text-gray-600 border-white/20 hover:bg-white/60 hover:border-[#F97316]/20 hover:text-[#F97316]"
                     }`}
                   >
-                    <span className="text-lg">{cat.icon}</span>
-                    <span className="text-[11px] uppercase font-bold tracking-wider">
+                    <span className="text-xl drop-shadow-sm">{cat.icon}</span>
+                    <span className="text-[11px] uppercase font-black italic tracking-wider">
                       {cat.label}
                     </span>
                   </button>
                 ))}
-
-                <div className="mt-6 pt-6 border-t border-gray-100">
-                  <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] mb-4 ml-2">
-                    TU BOLSA DE COMPRA
-                  </p>
-                  <button className="w-full flex justify-between items-center p-4 rounded-[1.5rem] bg-[#F97316]/10 border border-[#F97316]/20 group">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">🛒</span>
-                      <div className="text-left">
-                        <p className="text-[10px] font-black text-[#1F2937] uppercase leading-none">
-                          Mi Carrito
-                        </p>
-                        <p className="text-[8px] text-[#F97316] font-bold mt-1 uppercase tracking-widest">
-                          {carrito.length} Artículos
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-[#F97316] group-hover:translate-x-1 transition-transform">
-                      →
-                    </span>
-                  </button>
-                </div>
               </div>
 
-              <div className="pt-4 space-y-3 mt-4 border-t border-gray-100">
+              {/* PIE DEL SIDEBAR (REDES Y SOPORTE) - AHORA CON ICONOS REALES */}
+              <div className="mt-auto pt-6 border-t-2 border-black/5 flex flex-col gap-3">
+                {/* BOTONES DE REDES SOCIALES */}
+                <div className="flex gap-2">
+                  <a
+                    href="https://www.instagram.com/kaoristore_bo"
+                    target="_blank"
+                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-2xl text-white shadow-lg active:scale-95 transition-all"
+                  >
+                    <span className="text-lg">📸</span>
+                    <span className="text-[10px] font-black uppercase italic tracking-tighter">
+                      Instagram
+                    </span>
+                  </a>
+
+                  <a
+                    href="https://www.tiktok.com/@kaori.han?_r=1&_t=ZS-95XiQ3gI9e4"
+                    target="_blank"
+                    // Tik Tok mantiene fondo negro absoluto
+                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-black rounded-2xl text-white shadow-lg active:scale-95 transition-all border-b-4 border-gray-800"
+                  >
+                    <svg
+                      viewBox="0 0 448 512"
+                      className="w-5 h-5 drop-shadow-[0_0_8px_rgba(31,235,231,0.5)]"
+                      fill="white" // Color de relleno del icono
+                    >
+                      <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z" />
+                    </svg>
+                    <span className="text-[10px] font-black uppercase italic tracking-tighter ml-1">
+                      Tik Tok
+                    </span>
+                  </a>
+                </div>
+
+                {/* WHATSAPP SOPORTE */}
                 <a
                   href="https://wa.me/59174244882"
                   target="_blank"
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-[1.5rem] border border-gray-100 active:scale-95 transition-all"
+                  className="flex items-center justify-between p-5 bg-[#22c55e] rounded-[2.2rem] text-white shadow-[0_15px_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
                 >
-                  <div>
-                    <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-0.5">
-                      Soporte y Ventas
+                  <div className="text-left">
+                    <p className="text-[9px] font-black text-white/70 uppercase">
+                      Atención Inmediata
                     </p>
-                    <p className="text-[11px] text-[#1F2937] font-black italic uppercase">
+                    <p className="text-xs font-black uppercase italic">
                       WhatsApp Oficial
                     </p>
                   </div>
-                  <div className="w-8 h-8 bg-[#22c55e]/10 rounded-full flex items-center justify-center text-[#22c55e]">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                     💬
                   </div>
                 </a>
