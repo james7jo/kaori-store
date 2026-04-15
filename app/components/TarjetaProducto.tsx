@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
-// ⭐ Rating
+// ⭐ Rating - AHORA EN NARANJA
 function StarRating({ score }: { score: number }) {
   return (
     <div className="flex gap-[2px]">
@@ -10,7 +10,7 @@ function StarRating({ score }: { score: number }) {
         <span
           key={i}
           className={`text-[10px] ${
-            i <= score ? "text-blue-400" : "text-gray-700"
+            i <= score ? "text-[#F97316]" : "text-gray-300"
           }`}
         >
           ★
@@ -24,7 +24,6 @@ export default function TarjetaProducto({ producto, onClick }: any) {
   const [loaded, setLoaded] = useState(false);
   const [consultas, setConsultas] = useState(producto.consultas || 0);
 
-  // ⭐ rating por ventas (cada 5 ventas)
   const vendidosCalculados = Math.max(
     0,
     (producto.stockInicial || 0) - (producto.stock || 0),
@@ -37,7 +36,6 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
   const tieneDescuento = producto.descuento && producto.descuento !== "";
 
-  // 🔥 CARGAR consultas guardadas
   useEffect(() => {
     const saved = localStorage.getItem(`consultas_${producto.id}`);
     if (saved) {
@@ -45,7 +43,6 @@ export default function TarjetaProducto({ producto, onClick }: any) {
     }
   }, [producto.id]);
 
-  // 🔥 SUMAR CONSULTA (click)
   const handleClick = () => {
     const nuevas = consultas + 1;
     setConsultas(nuevas);
@@ -53,39 +50,39 @@ export default function TarjetaProducto({ producto, onClick }: any) {
     onClick();
   };
 
-  // 🧠 BADGE INTELIGENTE
+  // 🧠 BADGE INTELIGENTE - COLORES SINCRONIZADOS
   const getBadge = () => {
     if (tieneDescuento) {
       return {
         text: `-${producto.descuento}`,
-        style: "bg-red-500/10 border-red-500/30 text-red-400",
+        style: "bg-red-500/10 border-red-500/20 text-red-500",
       };
     }
 
     if (vendidosCalculados > 20) {
       return {
         text: "🔥 Top ventas",
-        style: "bg-blue-500/10 border-blue-500/30 text-blue-400",
+        style: "bg-[#F97316]/10 border-[#F97316]/20 text-[#F97316]",
       };
     }
 
     if (vendidosCalculados < 3) {
       return {
         text: "🆕 Nuevo",
-        style: "bg-cyan-500/10 border-cyan-500/30 text-cyan-400",
+        style: "bg-orange-400/10 border-orange-400/20 text-orange-500",
       };
     }
 
     if (producto.stock > 0 && producto.stock <= 5) {
       return {
         text: "⏳ Últimas",
-        style: "bg-yellow-500/10 border-yellow-500/30 text-yellow-400",
+        style: "bg-amber-500/10 border-amber-500/20 text-amber-600",
       };
     }
 
     return {
       text: "🚚 Envío Nacional",
-      style: "bg-white/5 border-white/10 text-gray-400",
+      style: "bg-gray-100 border-gray-200 text-gray-500",
     };
   };
 
@@ -96,15 +93,16 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       onClick={handleClick}
       whileTap={{ scale: 0.95 }}
       whileHover={{ y: -4 }}
-      className="relative bg-[#1e2022] rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+      // FONDO BLANCO Y BORDE NARANJA SUAVE
+      className="relative bg-white rounded-2xl overflow-hidden group cursor-pointer border border-[#F97316]/10 shadow-[0_10px_30px_rgba(0,0,0,0.05)]"
     >
-      {/* Glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent pointer-events-none" />
+      {/* Glow Naranja al pasar el mouse */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#F97316]/5 via-transparent to-transparent pointer-events-none" />
 
-      {/* IMAGEN */}
-      <div className="aspect-square relative bg-[#151719] overflow-hidden">
+      {/* IMAGEN - FONDO CREMA SUAVE */}
+      <div className="aspect-square relative bg-[#FFF8F1]/30 overflow-hidden">
         {!loaded && (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#2a2d32] to-[#1e2022]" />
+          <div className="absolute inset-0 animate-pulse bg-gray-100" />
         )}
 
         <img
@@ -117,9 +115,9 @@ export default function TarjetaProducto({ producto, onClick }: any) {
           alt={producto.nombre}
         />
 
-        {/* 🔻 DESCUENTO */}
+        {/* 🔻 DESCUENTO NARANJA INTENSO */}
         {tieneDescuento && (
-          <div className="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md">
+          <div className="absolute top-2 left-2 bg-[#EA580C] px-2 py-1 rounded-md shadow-md">
             <span className="text-[10px] font-bold text-white">
               -{producto.descuento}
             </span>
@@ -128,19 +126,19 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
         {/* ⚠️ POCAS UNIDADES */}
         {producto.stock > 0 && producto.stock <= 5 && (
-          <div className="absolute bottom-2 left-2 bg-yellow-500/90 px-2 py-1 rounded-md shadow-md animate-pulse">
-            <span className="text-[10px] font-bold text-black uppercase">
+          <div className="absolute bottom-2 left-2 bg-amber-500 px-2 py-1 rounded-md shadow-md animate-pulse">
+            <span className="text-[10px] font-black text-white uppercase">
               {producto.stock === 1
-                ? "🔥 Última unidad"
-                : `⚠️ Quedan ${producto.stock}`}
+                ? "Última unidad"
+                : `Quedan ${producto.stock}`}
             </span>
           </div>
         )}
 
         {/* 🚫 AGOTADO */}
         {producto.stock === 0 && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-            <span className="text-xs font-black text-white bg-red-600 px-3 py-1 rounded-md">
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="text-xs font-black text-white bg-gray-400 px-3 py-1 rounded-md uppercase">
               Agotado
             </span>
           </div>
@@ -149,7 +147,8 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
       {/* INFO */}
       <div className="p-3 flex flex-col gap-2">
-        <h3 className="text-[13px] text-gray-100 font-bold uppercase line-clamp-2 h-[34px] group-hover:text-blue-400 transition">
+        {/* NOMBRE EN GRIS PIZARRA */}
+        <h3 className="text-[13px] text-[#1F2937] font-bold uppercase line-clamp-2 h-[34px] group-hover:text-[#F97316] transition">
           {producto.nombre}
         </h3>
 
@@ -157,20 +156,22 @@ export default function TarjetaProducto({ producto, onClick }: any) {
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             {tieneDescuento && (
-              <span className="text-[10px] text-gray-500 line-through">
+              <span className="text-[10px] text-gray-400 line-through">
                 Bs {producto.precio + 10}
               </span>
             )}
 
             <div className="flex items-end gap-1">
-              <span className="text-blue-500 text-xs font-bold">Bs</span>
-              <span className="text-2xl font-bold text-white">
+              <span className="text-[#F97316] text-xs font-bold uppercase">
+                Bs
+              </span>
+              <span className="text-2xl font-black text-[#1F2937]">
                 {producto.precio}
               </span>
             </div>
           </div>
 
-          {/* Badge */}
+          {/* Badge Dinámico */}
           <div className={`px-2 py-[2px] rounded-md border ${badge.style}`}>
             <span className="text-[8px] font-bold uppercase">{badge.text}</span>
           </div>
@@ -178,22 +179,26 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
         {/* RATING + DATOS */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 bg-white/5 px-2 py-[2px] rounded-md">
+          <div className="flex items-center gap-1 bg-gray-50 px-2 py-[2px] rounded-md border border-gray-100">
             <StarRating score={rating} />
-            <span className="text-[10px] text-gray-400">{rating}.0</span>
+            <span className="text-[10px] text-gray-500 font-bold">
+              {rating}.0
+            </span>
           </div>
 
           {/* CONSULTAS + VENDIDOS */}
-          <div className="flex items-center gap-2 text-[10px] text-gray-500">
-            <span>💬 {consultas}</span>
+          <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+            <span className="group-hover:text-[#F97316] transition">
+              💬 {consultas}
+            </span>
             <span>•</span>
             <span>🛒 {vendidosCalculados}</span>
           </div>
         </div>
       </div>
 
-      {/* BORDE */}
-      <div className="absolute inset-0 rounded-2xl border border-blue-500/0 group-hover:border-blue-500/20 transition pointer-events-none" />
+      {/* BORDE DE ENFOQUE AL HOVER */}
+      <div className="absolute inset-0 rounded-2xl border-2 border-[#F97316]/0 group-hover:border-[#F97316]/10 transition pointer-events-none" />
     </motion.div>
   );
 }
