@@ -18,7 +18,7 @@ export default function CatalogoKaori() {
   const [carrito, setCarrito] = useState<any[]>([]);
 
   // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
-  // Detecta el botón físico/gesto atrás del celular para cerrar el modal sin salir de la web. // NO QUITAR
+  // Detecta el botón físico/gesto atrás del celular para cerrar el modal o buscador sin salir de la web. // NO QUITAR
   useEffect(() => {
     const manejarBotonAtras = () => {
       if (sel) {
@@ -82,16 +82,16 @@ export default function CatalogoKaori() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <p className="text-orange-500 font-black animate-pulse italic tracking-[0.3em] uppercase">
+      <div className="min-h-screen bg-[#050000] flex items-center justify-center">
+        <p className="text-red-600 font-black animate-pulse italic tracking-[0.3em] uppercase text-xl">
           KAORI STORE
         </p>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white font-sans pb-40 overflow-x-hidden">
-      {/* ─── SIDEBAR PREMIUM ─── */}
+    <div className="min-h-screen bg-[#050000] text-white font-sans pb-40 overflow-x-hidden">
+      {/* ─── SIDEBAR ROJO PREMIUM ─── */}
       <AnimatePresence>
         {menuAbierto && (
           <>
@@ -100,34 +100,34 @@ export default function CatalogoKaori() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMenuAbierto(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60]"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-[#0d0d0d] z-[70] border-r border-white/5 p-6 shadow-2xl flex flex-col"
+              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-[#0a0000] z-[70] border-r border-red-900/30 p-6 shadow-[20px_0_50px_rgba(255,0,0,0.1)] flex flex-col"
             >
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <p className="text-orange-500 font-black animate-pulse italic tracking-[0.3em] uppercase">
+                  <p className="text-red-600 font-black animate-pulse italic tracking-[0.1em] uppercase text-xl">
                     KAORI STORE
                   </p>
-                  <p className="text-[7px] text-gray-600 font-bold uppercase tracking-[0.4em] mt-1">
-                    Explora nuestra tienda
+                  <p className="text-[7px] text-gray-500 font-bold uppercase tracking-[0.4em] mt-1">
+                    Colección Roja
                   </p>
                 </div>
                 <button
                   onClick={() => setMenuAbierto(false)}
-                  className="w-10 h-10 bg-white/5 rounded-2xl text-gray-500 flex items-center justify-center"
+                  className="w-10 h-10 bg-red-950/20 rounded-2xl text-red-500 flex items-center justify-center border border-red-500/20"
                 >
                   ✕
                 </button>
               </div>
 
               <div className="space-y-1.5 overflow-y-auto flex-1 no-scrollbar">
-                <p className="text-[8px] font-black text-gray-700 uppercase tracking-[0.3em] mb-3 ml-2">
+                <p className="text-[8px] font-black text-red-900 uppercase tracking-[0.3em] mb-3 ml-2">
                   Categorías
                 </p>
                 {categoriasConfig.map((cat) => (
@@ -140,8 +140,8 @@ export default function CatalogoKaori() {
                     }}
                     className={`w-full flex items-center gap-4 p-3.5 rounded-2xl transition-all border ${
                       categoriaSel === cat.id && !soloOfertas
-                        ? "bg-gradient-to-r from-orange-600 to-red-600 border-transparent text-white font-black shadow-lg"
-                        : "bg-[#121212]/50 text-gray-400 border-white/5"
+                        ? "bg-gradient-to-r from-red-600 to-red-800 border-transparent text-white font-black shadow-[0_0_20px_rgba(255,0,0,0.3)] scale-[1.02]"
+                        : "bg-white/5 text-gray-400 border-white/5 hover:border-red-500/20"
                     }`}
                   >
                     <span className="text-lg">{cat.icon}</span>
@@ -151,18 +151,18 @@ export default function CatalogoKaori() {
                   </button>
                 ))}
 
-                <div className="mt-6 pt-6 border-t border-white/5">
-                  <p className="text-[8px] font-black text-gray-700 uppercase tracking-[0.3em] mb-3 ml-2">
+                <div className="mt-6 pt-6 border-t border-red-900/20">
+                  <p className="text-[8px] font-black text-red-900 uppercase tracking-[0.3em] mb-3 ml-2">
                     Tu Bolsa
                   </p>
-                  <button className="w-full flex justify-between items-center p-4 rounded-[1.5rem] bg-orange-600/10 border border-orange-600/20 group">
+                  <button className="w-full flex justify-between items-center p-4 rounded-[1.5rem] bg-red-600/10 border border-red-600/20 group">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">🛒</span>
                       <div className="text-left">
                         <p className="text-[10px] font-black text-white uppercase italic leading-none">
                           Mi Carrito
                         </p>
-                        <p className="text-[8px] text-orange-500 font-bold mt-1 uppercase tracking-widest">
+                        <p className="text-[8px] text-red-500 font-bold mt-1 uppercase tracking-widest">
                           {carrito.length} Artículos
                         </p>
                       </div>
@@ -174,7 +174,7 @@ export default function CatalogoKaori() {
                 </div>
               </div>
 
-              <div className="pt-4 space-y-3 mt-4 border-t border-white/5">
+              <div className="pt-4 space-y-3 mt-4 border-t border-red-900/20">
                 <a
                   href="https://wa.me/59174244882"
                   target="_blank"
@@ -188,14 +188,14 @@ export default function CatalogoKaori() {
                       WhatsApp Directo
                     </p>
                   </div>
-                  <div className="w-8 h-8 bg-[#25D366]/20 rounded-full flex items-center justify-center text-[#25D366]">
+                  <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]">
                     💬
                   </div>
                 </a>
                 <div className="flex gap-2">
                   <div className="flex-1 p-3 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center opacity-30">
                     <span className="text-lg">📸</span>
-                    <span className="text-[7px] font-black uppercase tracking-widest text-white mt-1">
+                    <span className="text-[7px] font-black uppercase text-white mt-1">
                       Instagram
                     </span>
                   </div>
@@ -205,7 +205,7 @@ export default function CatalogoKaori() {
                     className="flex-1 p-3 bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center active:scale-95 transition-all"
                   >
                     <span className="text-lg">🎵</span>
-                    <span className="text-[7px] font-black uppercase tracking-widest text-white mt-1">
+                    <span className="text-[7px] font-black uppercase text-white mt-1">
                       TikTok
                     </span>
                   </a>
@@ -216,33 +216,32 @@ export default function CatalogoKaori() {
         )}
       </AnimatePresence>
 
-      {/* ─── HEADER ─── */}
-      <div className="p-4 flex justify-between items-center bg-[#080808]">
+      {/* ─── HEADER (ROJO VIBRANTE) ─── */}
+      <div className="p-4 flex justify-between items-center bg-[#050000] sticky top-0 z-40 border-b border-red-900/10">
         <div className="flex flex-col">
-          {/* BOTÓN ADMIN OCULTO EN EL TEXTO // NO QUITAR */}
           <Link href="/admin">
             <h1
               translate="no"
-              className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent uppercase leading-none"
+              className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-red-500 via-red-600 to-red-800 bg-clip-text text-transparent uppercase leading-none drop-shadow-[0_0_10px_rgba(255,0,0,0.3)]"
             >
               KAORI STORE
             </h1>
           </Link>
-          <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest mt-1">
+          <p className="text-[9px] font-bold text-red-900 uppercase tracking-widest mt-1">
             Premium Experience
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setMenuAbierto(true)}
-            className="p-3 bg-[#121212] rounded-2xl border border-white/5 text-orange-500 shadow-xl"
+            className="p-3 bg-red-950/10 rounded-2xl border border-red-500/20 text-red-500 shadow-xl"
           >
             ☰
           </button>
-          <button className="relative p-3 bg-[#121212] rounded-2xl border border-white/5">
+          <button className="relative p-3 bg-red-950/10 rounded-2xl border border-red-500/20">
             <span className="text-xl">🛒</span>
             {carrito.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black border-2 border-[#080808]">
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black border-2 border-[#050000]">
                 {carrito.length}
               </span>
             )}
@@ -250,34 +249,32 @@ export default function CatalogoKaori() {
         </div>
       </div>
 
-      {/* ─── BUSCADOR FLOTANTE (APARECE EN DONDE ESTÉ EL SCROLL) // NO QUITAR ─── */}
+      {/* ─── BUSCADOR FLOTANTE (ESTILO ROJO) ─── */}
       <AnimatePresence>
         {buscadorVisible && (
           <div className="fixed inset-0 z-[100] pointer-events-none flex flex-col items-center justify-start pt-20 px-4">
-            {/* Fondo desenfocado detrás del input */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setBuscadorVisible(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-md pointer-events-auto"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md pointer-events-auto"
             />
-            {/* Input flotante */}
             <motion.div
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}
               className="w-full max-w-md relative pointer-events-auto"
             >
-              <div className="bg-[#151515] rounded-[2rem] flex items-center px-6 py-5 border border-orange-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                <span className="text-orange-500 mr-4 text-xl">🔍</span>
+              <div className="bg-[#111] rounded-[2rem] flex items-center px-6 py-5 border border-red-600/30 shadow-[0_0_40px_rgba(255,0,0,0.2)]">
+                <span className="text-red-600 mr-4 text-xl">🔍</span>
                 <input
                   type="text"
-                  placeholder="¿Qué estás buscando?"
+                  placeholder="¿Qué buscas en Kaori?"
                   value={busqueda}
                   autoFocus
                   onChange={(e) => setBusqueda(e.target.value)}
-                  className="bg-transparent outline-none text-base w-full text-white font-medium placeholder-gray-600"
+                  className="bg-transparent outline-none text-base w-full text-white font-medium placeholder-gray-700"
                 />
                 {busqueda && (
                   <button
@@ -288,15 +285,12 @@ export default function CatalogoKaori() {
                   </button>
                 )}
               </div>
-              <p className="text-center text-[10px] text-gray-400 mt-4 font-black uppercase tracking-widest opacity-50">
-                Toca afuera para cerrar
-              </p>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ─── CHIPS HORIZONTALES (Navegación) ─── */}
+      {/* ─── CHIPS (ROJO NEÓN) ─── */}
       <div className="flex gap-3 overflow-x-auto px-4 py-6 no-scrollbar scroll-smooth">
         {categoriasConfig.map((cat) => (
           <button
@@ -307,8 +301,8 @@ export default function CatalogoKaori() {
             }}
             className={`px-6 py-3 rounded-2xl text-[10px] font-black italic uppercase transition-all flex-shrink-0 border shadow-md ${
               categoriaSel === cat.id && !soloOfertas
-                ? "bg-orange-600 border-transparent text-white scale-105"
-                : "bg-[#121212] border-white/5 text-gray-500"
+                ? "bg-red-600 border-transparent text-white shadow-[0_0_15px_rgba(255,0,0,0.4)] scale-105"
+                : "bg-[#111] border-white/5 text-gray-500 hover:text-red-400"
             }`}
           >
             {cat.label}
@@ -316,13 +310,13 @@ export default function CatalogoKaori() {
         ))}
       </div>
 
-      {/* ─── LISTADO ─── */}
+      {/* ─── LISTADO (TÍTULOS ROJOS) ─── */}
       <div className="px-5 flex justify-between items-end mb-8">
         <div>
-          <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.4em] mb-1">
+          <p className="text-[9px] font-black text-red-600 uppercase tracking-[0.4em] mb-1">
             {soloOfertas ? "Exclusivo" : "Catálogo"}
           </p>
-          <h2 className="text-2xl font-black italic uppercase tracking-tighter text-gray-100 leading-none">
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">
             {soloOfertas
               ? "Super Ofertas"
               : categoriaSel === "Todo"
@@ -330,11 +324,12 @@ export default function CatalogoKaori() {
                 : categoriasConfig.find((c) => c.id === categoriaSel)?.label}
           </h2>
         </div>
-        <div className="bg-white/5 px-4 py-1.5 rounded-full border border-white/5 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+        <div className="bg-red-600/10 px-4 py-1.5 rounded-full border border-red-600/20 text-[10px] font-black text-red-500 uppercase tracking-widest">
           {productosFiltrados.length} Items
         </div>
       </div>
 
+      {/* PRODUCTOS */}
       <div className="px-4 grid grid-cols-2 gap-5">
         {productosFiltrados.map((p) => (
           <TarjetaProducto
@@ -345,8 +340,8 @@ export default function CatalogoKaori() {
         ))}
       </div>
 
-      {/* ─── NAVBAR INFERIOR PREMIUM (SIMÉTRICO) ─── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#080808]/95 backdrop-blur-2xl border-t border-white/5 px-2 py-4 flex items-end justify-center z-50 rounded-t-[2.5rem] shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
+      {/* ─── NAVBAR INFERIOR (SIMÉTRICO Y ROJO) ─── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#050000]/95 backdrop-blur-2xl border-t border-red-900/20 px-2 py-4 flex items-end justify-center z-50 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(255,0,0,0.15)]">
         <button
           onClick={() => {
             setCategoriaSel("Todo");
@@ -354,9 +349,11 @@ export default function CatalogoKaori() {
             setBusqueda("");
             setBuscadorVisible(false);
           }}
-          className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${categoriaSel === "Todo" && !soloOfertas && !buscadorVisible ? "text-orange-500 scale-110" : "text-gray-600"}`}
+          className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${categoriaSel === "Todo" && !soloOfertas && !buscadorVisible ? "text-red-500 scale-110" : "text-gray-600"}`}
         >
-          <span className="text-2xl">🏠</span>
+          <span className="text-2xl drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]">
+            🏠
+          </span>
           <span className="text-[7px] font-black uppercase tracking-[0.1em]">
             Inicio
           </span>
@@ -370,7 +367,7 @@ export default function CatalogoKaori() {
           }}
           className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${soloOfertas ? "text-red-500 scale-110" : "text-gray-600"}`}
         >
-          <span className="text-2xl relative">
+          <span className="text-2xl relative flex items-center justify-center">
             🔥{" "}
             {productos.some((p) => p.descuento) && (
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full animate-ping"></span>
@@ -385,18 +382,17 @@ export default function CatalogoKaori() {
           onClick={() => setMenuAbierto(true)}
           className="w-1/5 flex flex-col items-center justify-center relative"
         >
-          <div className="bg-gradient-to-tr from-orange-600 to-red-600 p-3.5 rounded-2xl -mt-10 shadow-[0_10px_20px_rgba(234,88,12,0.4)] border-4 border-[#080808] text-white flex items-center justify-center active:scale-90 transition-transform">
+          <div className="bg-gradient-to-tr from-red-500 to-red-800 p-3.5 rounded-2xl -mt-10 shadow-[0_10px_25px_rgba(255,0,0,0.5)] border-4 border-[#050000] text-white flex items-center justify-center active:scale-90 transition-transform">
             <span className="text-2xl">⚡</span>
           </div>
-          <span className="text-[7px] font-black uppercase tracking-[0.1em] mt-2 text-orange-500">
+          <span className="text-[7px] font-black uppercase tracking-[0.1em] mt-2 text-red-500">
             Explorar
           </span>
         </button>
 
-        {/* BOTÓN BUSCAR FLOTANTE // NO QUITAR */}
         <button
           onClick={() => setBuscadorVisible(!buscadorVisible)}
-          className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${buscadorVisible ? "text-orange-500 scale-110" : "text-gray-600"}`}
+          className={`w-1/5 flex flex-col items-center justify-center gap-1 transition-all ${buscadorVisible ? "text-red-500 scale-110" : "text-gray-600"}`}
         >
           <span className="text-2xl">🔍</span>
           <span className="text-[7px] font-black uppercase tracking-[0.1em]">
@@ -405,10 +401,10 @@ export default function CatalogoKaori() {
         </button>
 
         <button className="w-1/5 flex flex-col items-center justify-center gap-1 text-gray-600">
-          <span className="text-2xl relative">
+          <span className="text-2xl relative flex items-center justify-center">
             🛒{" "}
             {carrito.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-white text-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-black">
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-black">
                 {carrito.length}
               </span>
             )}
