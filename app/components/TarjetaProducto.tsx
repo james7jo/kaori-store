@@ -10,7 +10,7 @@ function StarRating({ score }: { score: number }) {
         <span
           key={i}
           className={`text-[10px] ${
-            i <= score ? "text-orange-400" : "text-gray-700"
+            i <= score ? "text-blue-400" : "text-gray-700"
           }`}
         >
           ★
@@ -65,14 +65,14 @@ export default function TarjetaProducto({ producto, onClick }: any) {
     if (vendidosCalculados > 20) {
       return {
         text: "🔥 Top ventas",
-        style: "bg-orange-500/10 border-orange-500/30 text-orange-400",
+        style: "bg-blue-500/10 border-blue-500/30 text-blue-400",
       };
     }
 
     if (vendidosCalculados < 3) {
       return {
         text: "🆕 Nuevo",
-        style: "bg-blue-500/10 border-blue-500/30 text-blue-400",
+        style: "bg-cyan-500/10 border-cyan-500/30 text-cyan-400",
       };
     }
 
@@ -96,15 +96,15 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       onClick={handleClick}
       whileTap={{ scale: 0.95 }}
       whileHover={{ y: -4 }}
-      className="relative bg-[#0e0e0e] rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+      className="relative bg-[#1e2022] rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
     >
       {/* Glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent pointer-events-none" />
 
       {/* IMAGEN */}
-      <div className="aspect-square relative bg-[#080808] overflow-hidden">
+      <div className="aspect-square relative bg-[#151719] overflow-hidden">
         {!loaded && (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#1a1a1a] to-[#111]" />
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#2a2d32] to-[#1e2022]" />
         )}
 
         <img
@@ -149,7 +149,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
       {/* INFO */}
       <div className="p-3 flex flex-col gap-2">
-        <h3 className="text-[13px] text-gray-100 font-bold uppercase line-clamp-2 h-[34px] group-hover:text-orange-400 transition">
+        <h3 className="text-[13px] text-gray-100 font-bold uppercase line-clamp-2 h-[34px] group-hover:text-blue-400 transition">
           {producto.nombre}
         </h3>
 
@@ -163,7 +163,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
             )}
 
             <div className="flex items-end gap-1">
-              <span className="text-orange-500 text-xs font-bold">Bs</span>
+              <span className="text-blue-500 text-xs font-bold">Bs</span>
               <span className="text-2xl font-bold text-white">
                 {producto.precio}
               </span>
@@ -193,7 +193,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       </div>
 
       {/* BORDE */}
-      <div className="absolute inset-0 rounded-2xl border border-orange-500/0 group-hover:border-orange-500/20 transition pointer-events-none" />
+      <div className="absolute inset-0 rounded-2xl border border-blue-500/0 group-hover:border-blue-500/20 transition pointer-events-none" />
     </motion.div>
   );
 }
