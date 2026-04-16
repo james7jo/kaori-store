@@ -602,6 +602,9 @@ export default function CatalogoKaori() {
             ubicacion={ubicacion}
             regionNombre={regionNombre}
             vincularGps={vincularGps}
+            loadingGps={loadingGps}
+            modoManual={modoManual}
+            setModoManual={setModoManual}
           />
         )}
       </AnimatePresence>

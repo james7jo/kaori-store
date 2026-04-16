@@ -9,6 +9,9 @@ interface Props {
   ubicacion: any;
   regionNombre: string;
   vincularGps: () => void;
+  loadingGps: boolean;
+  modoManual: boolean;
+  setModoManual: (val: boolean) => void;
 }
 export default function ModalDetalle({
   producto,
