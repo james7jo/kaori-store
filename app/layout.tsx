@@ -45,11 +45,15 @@ export const metadata: Metadata = {
     telephone: false,
   },
 
-  // 2. Esto hace que Google y WhatsApp muestren la imagen de la niña
+  // 2. Verificación de Google Search Console
+  verification: {
+    google: "WU3MWq1i8dncTHBXXog-paCx9olbTd5siYcIxukvv7Q",
+  },
+
+  // 3. Esto hace que Google y WhatsApp muestren la imagen de la niña
   openGraph: {
     title: "Kaori Store",
-    description:
-      "¡Envíos a toda Bolivia desde Cochabamba! La tienda de la niña del cabello azul.",
+    description: "¡Envíos a toda Bolivia desde Cochabamba!",
     url: "https://kaori-store.vercel.app",
     siteName: "Kaori Store",
     images: [
