@@ -29,6 +29,7 @@ export default function CatalogoKaori() {
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
+    // 1. Cargar el Carrito (Este sigue igual, está bien)
     const carritoGuardado = localStorage.getItem("carrito_kaori");
     if (carritoGuardado) {
       try {
@@ -37,7 +38,20 @@ export default function CatalogoKaori() {
         console.error("Error al cargar el carrito local:", error);
       }
     }
-  }, []);
+
+    // 2. 📍 Cargar la Ubicación y Región (¡REVISADO!)
+    const locGuardada = localStorage.getItem("ubicacion_kaori");
+    const regGuardada = localStorage.getItem("region_kaori");
+
+    if (locGuardada) {
+      // Cargamos el link directo, SIN JSON.parse
+      setUbicacion(locGuardada);
+    }
+
+    if (regGuardada) {
+      setRegionNombre(regGuardada);
+    }
+  }, []); // El array vacío hace que esto solo corra una vez al cargar la web, []);
 
   // 3. Efecto para GUARDAR el carrito automáticamente cada vez que cambie
   useEffect(() => {
@@ -45,10 +59,20 @@ export default function CatalogoKaori() {
   }, [carrito]);
   const [cartOpen, setCartOpen] = useState(false);
   // Pon esto junto a tus otros useState (donde está carrito, productos, etc.)
-  const [ubicacion, setUbicacion] = useState<any>(null);
+  const [ubicacion, setUbicacion] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      // Retornamos el texto directamente, sin parsearlo
+      return localStorage.getItem("ubicacion_kaori") || null;
+    }
+    return null;
+  });
   const [loadingGps, setLoadingGps] = useState(false);
-  const [regionNombre, setRegionNombre] = useState("");
-
+  const [regionNombre, setRegionNombre] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("region_kaori") || "";
+    }
+    return "";
+  });
   // Esta es la función que disparará el GPS
   const vincularGps = () => {
     setLoadingGps(true);
@@ -61,12 +85,18 @@ export default function CatalogoKaori() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        // Guardamos la ubicación
-        setUbicacion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        // 1. Preparamos los datos
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const nombreRegion = "Cochabamba"; // Aquí puedes poner tu lógica de detección
 
-        // AQUÍ VA TU LÓGICA: Por ahora pondremos "Detectado"
-        // pero puedes conectar tu API de Google para que diga "Cocha", "LP", etc.
-        setRegionNombre("Cochabamba");
+        // 2. Guardamos en el estado (lo que ves en pantalla ahora)
+        setUbicacion(coords);
+        setRegionNombre(nombreRegion);
+
+        // 3. 🔥 EL SECRETO: Guardamos en la memoria del celular para siempre
+        localStorage.setItem("ubicacion_kaori", JSON.stringify(coords));
+        localStorage.setItem("region_kaori", nombreRegion);
+
         setLoadingGps(false);
       },
       (error) => {
@@ -475,6 +505,10 @@ export default function CatalogoKaori() {
             key={p.id}
             producto={p}
             onClick={() => abrirProducto(p)}
+            // 👇 AÑADE ESTAS PROPS PARA MATAR LA REDUNDANCIA
+            ubicacion={ubicacion}
+            regionNombre={regionNombre}
+            vincularGps={vincularGps}
           />
         ))}
       </div>
@@ -571,6 +605,9 @@ export default function CatalogoKaori() {
             producto={sel}
             onClose={cerrarProducto}
             onAgregar={handleAgregarAlCarrito}
+            ubicacion={ubicacion}
+            regionNombre={regionNombre}
+            vincularGps={vincularGps}
           />
         )}
       </AnimatePresence>

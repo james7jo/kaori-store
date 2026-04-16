@@ -107,6 +107,11 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
     // 4. Codificamos y abrimos WhatsApp
     const mensajeURL = encodeURIComponent(cuerpoMensaje);
     window.open(`https://wa.me/59174244882?text=${mensajeURL}`);
+    // 🔥 LA MAGIA: Vaciamos el carrito después de enviar
+    setCarrito([]);
+
+    // Opcional: Cerramos el modal para que el usuario vea de nuevo el catálogo
+    onClose();
   };
 
   return (

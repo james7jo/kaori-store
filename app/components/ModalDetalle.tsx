@@ -6,15 +6,21 @@ interface Props {
   producto: any;
   onClose: () => void;
   onAgregar: (p: any) => void;
+  ubicacion: any;
+  regionNombre: string;
+  vincularGps: () => void;
 }
-
-export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
+export default function ModalDetalle({
+  producto,
+  onClose,
+  onAgregar,
+  ubicacion,
+  regionNombre,
+  vincularGps,
+}: Props) {
   // ─── ESTADOS DE CONTROL ───
   const [indexFoto, setIndexFoto] = useState(0);
-  const [ubicacion, setUbicacion] = useState<string | null>(null);
-  const [regionNombre, setRegionNombre] = useState<string>(
-    "Bolivia (Sin vincular)",
-  );
+
   const [loadingGps, setLoadingGps] = useState(false);
   const [cantidad, setCantidad] = useState(1);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -47,37 +53,43 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setUbicacion(`https://www.google.com/maps?q=${latitude},${longitude}`);
+        const urlMaps = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-        // Detección de Región para Bolivia (Simpificada)
+        let nombreDetectado = "Ubicación Detectada ✅";
+
+        // Detección de Región para Bolivia
         if (
           latitude > -18 &&
           latitude < -16.5 &&
           longitude > -67 &&
           longitude < -65.5
         ) {
-          setRegionNombre("Cochabamba y Valles");
+          nombreDetectado = "Cochabamba y Valles";
         } else if (
           latitude > -17 &&
           latitude < -15.5 &&
           longitude > -69 &&
           longitude < -67.5
         ) {
-          setRegionNombre("La Paz / Altiplano");
+          nombreDetectado = "La Paz / Altiplano";
         } else if (
           latitude > -18.5 &&
           latitude < -17 &&
           longitude > -64 &&
           longitude < -62
         ) {
-          setRegionNombre("Santa Cruz / Oriente");
-        } else {
-          setRegionNombre("Ubicación Detectada ✅");
+          nombreDetectado = "Santa Cruz / Oriente";
         }
+        // 2. 🔥 EL SECRETO: Guardamos en el celular para que sea GLOBAL
+        localStorage.setItem("ubicacion_kaori", urlMaps);
+        localStorage.setItem("region_kaori", nombreDetectado);
+
         setLoadingGps(false);
       },
       () => {
         setLoadingGps(false);
+        // Si el cliente niega el GPS, no hacemos nada,
+        // el botón manual que pondremos en el modal se encargará.
       },
       { enableHighAccuracy: true },
     );
