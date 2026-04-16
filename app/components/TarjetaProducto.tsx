@@ -157,7 +157,19 @@ export default function TarjetaProducto({ producto, onClick }: any) {
           <div className="flex flex-col">
             {tieneDescuento && (
               <span className="text-[10px] text-gray-400 line-through">
-                Bs {producto.precio + 10}
+                Bs{" "}
+                {(() => {
+                  const precio = Number(producto.precio) || 0;
+                  const desc = producto.descuento.toString();
+
+                  if (desc.includes("%")) {
+                    // Si pusiste "10%", calculamos el valor real para tacharlo
+                    const porcentaje = parseFloat(desc) / 100;
+                    return (precio / (1 - porcentaje)).toFixed(0);
+                  }
+                  // Si pusiste solo "10", sumamos directo
+                  return precio + (Number(desc) || 0);
+                })()}
               </span>
             )}
 
@@ -192,7 +204,13 @@ export default function TarjetaProducto({ producto, onClick }: any) {
               💬 {consultas}
             </span>
             <span>•</span>
-            <span>🛒 {vendidosCalculados}</span>
+            <span
+              className={
+                vendidosCalculados > 0 ? "text-[#F97316] font-bold" : ""
+              }
+            >
+              🛒 {vendidosCalculados}
+            </span>
           </div>
         </div>
       </div>

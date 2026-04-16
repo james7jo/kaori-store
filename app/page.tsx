@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import TarjetaProducto from "./components/TarjetaProducto";
 import ModalDetalle from "./components/ModalDetalle";
+import { agregarAlCarrito } from "./components/CartContext";
+import VistaCarrito from "./components/VistaCarrito";
 
 // ─── PALETA "SUNSET ENERGY" (CLARA Y PROFESIONAL) ─── // NO QUITAR
 // Fondo Base: #FFF8F1 (Crema/Naranja ultra claro, suave a la vista)
@@ -22,7 +24,63 @@ export default function CatalogoKaori() {
   const [loading, setLoading] = useState(true);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [buscadorVisible, setBuscadorVisible] = useState(false);
+  // 1. Declaramos el carrito, pero primero intentamos leer si ya tiene algo guardado
   const [carrito, setCarrito] = useState<any[]>([]);
+
+  // 2. Efecto para CARGAR el carrito al entrar a la web
+  useEffect(() => {
+    const carritoGuardado = localStorage.getItem("carrito_kaori");
+    if (carritoGuardado) {
+      try {
+        setCarrito(JSON.parse(carritoGuardado));
+      } catch (error) {
+        console.error("Error al cargar el carrito local:", error);
+      }
+    }
+  }, []);
+
+  // 3. Efecto para GUARDAR el carrito automáticamente cada vez que cambie
+  useEffect(() => {
+    localStorage.setItem("carrito_kaori", JSON.stringify(carrito));
+  }, [carrito]);
+  const [cartOpen, setCartOpen] = useState(false);
+  // Pon esto junto a tus otros useState (donde está carrito, productos, etc.)
+  const [ubicacion, setUbicacion] = useState<any>(null);
+  const [loadingGps, setLoadingGps] = useState(false);
+  const [regionNombre, setRegionNombre] = useState("");
+
+  // Esta es la función que disparará el GPS
+  const vincularGps = () => {
+    setLoadingGps(true);
+
+    if (!navigator.geolocation) {
+      alert("Tu navegador no soporta GPS");
+      setLoadingGps(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // Guardamos la ubicación
+        setUbicacion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+
+        // AQUÍ VA TU LÓGICA: Por ahora pondremos "Detectado"
+        // pero puedes conectar tu API de Google para que diga "Cocha", "LP", etc.
+        setRegionNombre("Cochabamba");
+        setLoadingGps(false);
+      },
+      (error) => {
+        console.error(error);
+        setLoadingGps(false);
+        alert("No pudimos obtener tu ubicación");
+      },
+    );
+  };
+  // ─── FUNCIÓN MAESTRA PARA CONECTAR MODAL Y CARRITO ───
+  const handleAgregarAlCarrito = (productoConCantidad: any) => {
+    // Usamos el "motor" del archivo CartContext
+    agregarAlCarrito(productoConCantidad, carrito, setCarrito);
+  };
 
   // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
   // Su función es cerrar el cuadro de detalles del producto o buscador en lugar de cerrar toda la página web. // NO QUITAR
@@ -299,12 +357,32 @@ export default function CatalogoKaori() {
           >
             ☰
           </button>
-          <button className="relative p-3 bg-gray-50 rounded-2xl border border-gray-100 text-[#1F2937] shadow-sm active:scale-90 transition-transform">
-            <span className="text-xl">🛒</span>
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative w-12 h-12 bg-white rounded-2xl border border-orange-100 text-[#1F2937] shadow-[0_4px_12px_rgba(249,115,22,0.08)] flex items-center justify-center active:scale-90 transition-all duration-300 group hover:border-orange-300"
+          >
+            {/* Icono con ligero movimiento al pasar el mouse */}
+            <span className="text-xl group-hover:rotate-12 transition-transform duration-300">
+              🛒
+            </span>
+
+            {/* Badge de cantidad (El punto rojo) mejorado */}
+            <AnimatePresence>
+              {carrito.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="absolute -top-1.5 -right-1.5 bg-[#F97316] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-md shadow-orange-200"
+                >
+                  {carrito.length}
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* Efecto de brillo sutil en el borde cuando hay productos */}
             {carrito.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#EF4444] text-white text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center font-black border-2 border-white">
-                {carrito.length}
-              </span>
+              <span className="absolute inset-0 rounded-2xl border-2 border-orange-400/20 animate-pulse pointer-events-none" />
             )}
           </button>
         </div>
@@ -460,14 +538,26 @@ export default function CatalogoKaori() {
           </span>
         </button>
 
-        <button className="w-1/5 flex flex-col items-center justify-center gap-1.5 text-gray-400 active:scale-95 transition-transform">
+        <button
+          onClick={() => setCartOpen(true)}
+          className={`w-1/5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all duration-300 ${
+            cartOpen ? "text-[#F97316] scale-110" : "text-gray-400"
+          }`}
+        >
           <span className="text-2xl relative flex items-center justify-center">
-            🛒{" "}
-            {carrito.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-[#F97316] text-white text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center font-black border-2 border-white">
-                {carrito.length}
-              </span>
-            )}
+            🛒
+            <AnimatePresence>
+              {carrito.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="absolute -top-1.5 -right-1.5 bg-[#F97316] text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm"
+                >
+                  {carrito.length}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </span>
           <span className="text-[8px] font-black uppercase tracking-[0.1em]">
             Carrito
@@ -480,10 +570,20 @@ export default function CatalogoKaori() {
           <ModalDetalle
             producto={sel}
             onClose={cerrarProducto}
-            onAgregar={(p) => setCarrito([...carrito, p])}
+            onAgregar={handleAgregarAlCarrito}
           />
         )}
       </AnimatePresence>
+      <VistaCarrito
+        carrito={carrito}
+        setCarrito={setCarrito}
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+        ubicacion={ubicacion}
+        loadingGps={loadingGps}
+        regionNombre={regionNombre}
+        vincularGps={vincularGps}
+      />
     </div>
   );
 }

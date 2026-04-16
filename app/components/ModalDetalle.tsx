@@ -19,6 +19,7 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
   const [cantidad, setCantidad] = useState(1);
   const [showImageModal, setShowImageModal] = useState(false);
   const [activeTab, setActiveTab] = useState("detalle");
+  const [agregado, setAgregado] = useState(false);
 
   const fotos = producto.galeria
     ? [producto.imagen, ...producto.galeria.split(",").filter(Boolean)]
@@ -218,6 +219,7 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
           </div>
 
           {/* TABS NAVEGACIÓN */}
+
           <div className="flex gap-8 px-6 border-b border-orange-100">
             {["detalle", "envío", "garantía"].map((tab) => (
               <button
@@ -686,16 +688,62 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
         <div className="bg-white/95 backdrop-blur-xl border-t border-orange-100 px-6 py-6 z-[80] flex gap-3 shadow-[0_-20px_40px_rgba(249,115,22,0.1)] rounded-t-[3.5rem] absolute bottom-0 left-0 right-0">
           <button
             onClick={() => {
-              onAgregar(producto);
-              alert("Añadido 🛒");
+              // 1. Rescatamos la cantidad que el usuario eligió en el modal
+              // Se envía como 'cantidadSeleccionada' para que el motor del carrito lo procese
+              onAgregar({ ...producto, cantidadSeleccionada: cantidad });
+
+              // 2. Activamos la animación de éxito (Check verde)
+              setAgregado(true);
+
+              // 3. Volvemos al estado normal después de 2 segundos
+              setTimeout(() => setAgregado(false), 2000);
             }}
-            className="w-18 h-18 bg-white border-2 border-orange-100 rounded-[2rem] flex items-center justify-center text-4xl shadow-sm active:scale-90 transition-all"
+            className={`relative w-18 h-18 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-lg active:scale-95 border-2 ${
+              agregado
+                ? "bg-emerald-500 border-emerald-400 shadow-emerald-200"
+                : "bg-white border-orange-50 shadow-orange-100 hover:border-orange-200"
+            }`}
           >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png"
-              className="w-8 h-8 opacity-40"
-              alt="Cart"
-            />
+            <AnimatePresence mode="wait">
+              {agregado ? (
+                <motion.div
+                  key="success"
+                  initial={{ scale: 0, rotate: -45 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0 }}
+                  className="flex flex-col items-center"
+                >
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 12.75l6 6 9-13.5"
+                    />
+                  </svg>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="cart-icon"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative"
+                >
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png"
+                    className="w-8 h-8 opacity-70 grayscale-[0.2]"
+                    alt="Cart"
+                  />
+                  {/* El toque Kaori: puntito naranja que indica acción */}
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#F97316] rounded-full border-2 border-white animate-pulse"></span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </button>
 
           <button
