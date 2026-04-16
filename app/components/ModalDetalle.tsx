@@ -19,6 +19,9 @@ export default function ModalDetalle({
   vincularGps,
 }: Props) {
   // ─── ESTADOS DE CONTROL ───
+  const [modoManual, setModoManual] = useState(false);
+  const [textoCiudad, setTextoCiudad] = useState("");
+  const [ciudadManual, setCiudadManual] = useState("");
   const [indexFoto, setIndexFoto] = useState(0);
 
   const [loadingGps, setLoadingGps] = useState(false);
@@ -403,110 +406,152 @@ export default function ModalDetalle({
 
                     <div ref={gpsRef} className="w-full pt-2">
                       {/* Botón GPS Mejorado */}
-                      <button
-                        onClick={obtenerUbicacion}
-                        className={`w-full overflow-hidden relative group transition-all duration-500 ${
-                          ubicacion
-                            ? "bg-white border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)] scale-[1.02]"
-                            : "bg-orange-50/50 border-orange-200 shadow-sm animate-pulse active:scale-95"
-                        } border-2 rounded-[2rem] p-[3px]`}
-                      >
-                        <div
-                          className={`flex items-center justify-between px-5 py-5 rounded-[1.7rem] transition-colors duration-500 ${
-                            ubicacion ? "bg-emerald-50/30" : "bg-white"
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            {/* Icono Dinámico */}
-                            <div
-                              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${
-                                ubicacion
-                                  ? "bg-emerald-500 text-white rotate-[360deg]"
-                                  : "bg-orange-500 text-white shadow-orange-200"
-                              }`}
+                      {/* ─── BLOQUE DE UBICACIÓN INTELIGENTE ─── */}
+                      <div ref={gpsRef} className="w-full pt-2">
+                        <div className="w-full space-y-3">
+                          {/* 1. MENSAJE DE AYUDA (Se activa si el GPS falla o no hay ubicación) */}
+                          {!ubicacion && !loadingGps && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="bg-orange-50/50 border border-orange-100 p-4 rounded-3xl flex items-start gap-3"
                             >
-                              {loadingGps ? (
-                                <svg
-                                  className="animate-spin h-6 w-6 text-white"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                    fill="none"
-                                  />
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  />
-                                </svg>
-                              ) : (
-                                <svg
-                                  className="w-6 h-6"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.5"
-                                  viewBox="0 0 24 24"
-                                >
-                                  {ubicacion ? (
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  ) : (
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                                    />
-                                  )}
-                                </svg>
-                              )}
-                            </div>
-
-                            <div className="text-left">
-                              <div className="flex items-center gap-2">
-                                <p
-                                  className={`text-[10px] font-black uppercase tracking-[2px] leading-none ${ubicacion ? "text-emerald-600" : "text-orange-600"}`}
-                                >
-                                  {ubicacion
-                                    ? "Logística Lista"
-                                    : "Punto de Entrega"}
-                                </p>
-                                {!ubicacion && !loadingGps && (
-                                  <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-ping"></span>
-                                )}
-                              </div>
-                              <p className="text-[14px] font-[1000] text-slate-800 mt-1 uppercase italic tracking-tighter">
-                                {loadingGps
-                                  ? "Buscando..."
-                                  : ubicacion
-                                    ? "Destino Confirmado ✓"
-                                    : "¿A dónde lo enviamos?"}
+                              <span className="text-xl">💡</span>
+                              <p className="text-[10px] text-gray-500 font-bold leading-relaxed uppercase">
+                                Si el GPS no carga o prefieres no usarlo, puedes
+                                <span className="text-[#F97316] ml-1">
+                                  escribir tu ciudad manualmente
+                                </span>{" "}
+                                aquí abajo.
                               </p>
-                            </div>
-                          </div>
+                            </motion.div>
+                          )}
 
-                          {/* Estado Derecho */}
-                          <div className="flex flex-col items-end">
-                            {ubicacion ? (
-                              <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-black uppercase">
-                                Listo
+                          {/* 2. EL BOTÓN GPS (Solo si no hay ubicación y no estamos en modo manual) */}
+                          {!ubicacion && !modoManual && (
+                            <>
+                              <button
+                                onClick={vincularGps}
+                                className={`w-full overflow-hidden relative group transition-all duration-500 bg-orange-50/50 border-orange-200 shadow-sm ${loadingGps ? "cursor-wait" : "animate-pulse active:scale-95"} border-2 rounded-[2rem] p-[3px]`}
+                              >
+                                <div className="flex items-center justify-between px-5 py-5 rounded-[1.7rem] bg-white">
+                                  <div className="flex items-center gap-4">
+                                    <div
+                                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${loadingGps ? "bg-gray-200" : "bg-orange-500 text-white shadow-orange-200"}`}
+                                    >
+                                      {loadingGps ? (
+                                        <span className="animate-spin text-xl">
+                                          ⏳
+                                        </span>
+                                      ) : (
+                                        "📍"
+                                      )}
+                                    </div>
+                                    <div className="text-left">
+                                      <p className="text-[10px] font-black uppercase tracking-[2px] leading-none text-orange-600">
+                                        Punto de Entrega
+                                      </p>
+                                      <p className="text-[14px] font-[1000] text-slate-800 mt-1 uppercase italic tracking-tighter">
+                                        {loadingGps
+                                          ? "Conectando satélite..."
+                                          : "¿A dónde lo enviamos?"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+
+                              <button
+                                onClick={() => setModoManual(true)}
+                                className="w-full text-center text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-[#F97316] transition-colors"
+                              >
+                                — o escribir ciudad manualmente —
+                              </button>
+                            </>
+                          )}
+
+                          {/* 3. PLAN B: INPUT MANUAL (Ahora con diseño premium) */}
+                          {!ubicacion && modoManual && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="bg-white border-2 border-orange-100 p-6 rounded-[2.5rem] shadow-xl"
+                            >
+                              <p className="text-[11px] font-black text-[#F97316] uppercase mb-4 px-2 tracking-tighter">
+                                Ingresa tu Ciudad o Pueblo:
+                              </p>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Ej: La Paz, El Alto"
+                                  value={ciudadManual}
+                                  onChange={(e) =>
+                                    setCiudadManual(e.target.value)
+                                  }
+                                  className="flex-1 bg-[#FFF9F5] border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-[#F97316] placeholder:text-gray-300 shadow-inner"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (ciudadManual.length > 2) {
+                                      localStorage.setItem(
+                                        "ubicacion_kaori",
+                                        "manual",
+                                      );
+                                      localStorage.setItem(
+                                        "region_kaori",
+                                        ciudadManual,
+                                      );
+                                      window.location.reload();
+                                    }
+                                  }}
+                                  className="bg-[#1F2937] text-white px-6 rounded-2xl font-black text-xs active:scale-90 transition-transform shadow-lg shadow-gray-200"
+                                >
+                                  OK
+                                </button>
                               </div>
-                            ) : (
-                              <div className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[9px] font-black uppercase animate-bounce">
-                                Tocar Aquí
+                              <button
+                                onClick={() => setModoManual(false)}
+                                className="mt-4 text-[9px] text-gray-400 uppercase font-black block w-full text-center"
+                              >
+                                Volver al GPS
+                              </button>
+                            </motion.div>
+                          )}
+
+                          {/* 4. ÉXITO (El bloque verde que ya conoces) */}
+                          {ubicacion && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="bg-emerald-500 text-white p-5 rounded-[2.5rem] flex items-center justify-between shadow-lg shadow-emerald-100 border-2 border-emerald-400"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
+                                  📍
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] font-black uppercase opacity-80">
+                                    Logística Confirmada:
+                                  </span>
+                                  <span className="text-[14px] font-[1000] italic uppercase mt-1">
+                                    {regionNombre}
+                                  </span>
+                                </div>
                               </div>
-                            )}
-                          </div>
+                              <button
+                                onClick={() => {
+                                  localStorage.removeItem("ubicacion_kaori");
+                                  localStorage.removeItem("region_kaori");
+                                  window.location.reload();
+                                }}
+                                className="bg-white/20 px-3 py-2 rounded-xl text-[9px] font-black uppercase"
+                              >
+                                Cambiar
+                              </button>
+                            </motion.div>
+                          )}
                         </div>
-                      </button>
+                      </div>
 
                       {/* Info de Tiempos y Garantía */}
                       <div className="grid grid-cols-2 gap-3">

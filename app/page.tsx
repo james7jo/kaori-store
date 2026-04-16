@@ -78,32 +78,33 @@ export default function CatalogoKaori() {
     setLoadingGps(true);
 
     if (!navigator.geolocation) {
-      alert("Tu navegador no soporta GPS");
+      alert(
+        "Tu navegador no soporta GPS, por favor escribe tu ciudad manualmente.",
+      );
       setLoadingGps(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        // 1. Preparamos los datos
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        const nombreRegion = "Cochabamba"; // Aquí puedes poner tu lógica de detección
+        const coords = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        const nombreRegion = "Ubicación por GPS ✅";
 
-        // 2. Guardamos en el estado (lo que ves en pantalla ahora)
         setUbicacion(coords);
         setRegionNombre(nombreRegion);
 
-        // 3. 🔥 EL SECRETO: Guardamos en la memoria del celular para siempre
-        localStorage.setItem("ubicacion_kaori", JSON.stringify(coords));
+        localStorage.setItem("ubicacion_kaori", coords);
         localStorage.setItem("region_kaori", nombreRegion);
 
         setLoadingGps(false);
       },
       (error) => {
-        console.error(error);
+        // Silencio total en la interfaz, solo un aviso para ti en consola
+        console.warn("GPS no disponible, pasando a modo manual.");
         setLoadingGps(false);
-        alert("No pudimos obtener tu ubicación");
+        // Borramos el alert() feo de aquí.
       },
+      { timeout: 10000 }, // Si en 10 segundos no responde, da error (evita el loading infinito)
     );
   };
   // ─── FUNCIÓN MAESTRA PARA CONECTAR MODAL Y CARRITO ───
