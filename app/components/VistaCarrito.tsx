@@ -153,7 +153,7 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
                   </h2>
                   <p className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em] mt-2 flex items-center gap-2">
                     <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    {carrito.length} Items seleccionados
+                    {carrito.length} Productos seleccionados
                   </p>
                 </div>
                 <button

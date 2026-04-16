@@ -50,11 +50,29 @@ export default function ModalDetalle({
   }, []);
 
   const enviarWhatsApp = (accion: "compra" | "consulta") => {
-    const gpsPart = ubicacion
-      ? `\n📍 *Ubicación (${regionNombre}):* ${ubicacion}`
-      : "\n📍 *Región:* Por coordinar";
-    const total = producto.precio * cantidad;
-    const text = `¡Hola Kaori Store! 👋\n${accion === "compra" ? "*SOLICITUD DE COMPRA*" : "*CONSULTA DE PRODUCTO*"} \n📦 *Art:* ${producto.nombre.toUpperCase()}\n🔢 *Cant:* ${cantidad}\n💰 *Total:* BOB ${total}${gpsPart}\n\n_kaori-store.vercel.app_`;
+    // Solo mandamos GPS y detalles de dinero si es una COMPRA
+    const gpsPart =
+      accion === "compra" && ubicacion
+        ? `\n📍 *Ubicación (${regionNombre}):* ${ubicacion}`
+        : "";
+
+    const detallesCompra =
+      accion === "compra"
+        ? `\n🔢 *Cant:* ${cantidad}\n💰 *Total:* BOB ${(producto.precio * cantidad).toFixed(2)}`
+        : "";
+
+    const titulo =
+      accion === "compra" ? "🛍️ SOLICITUD DE COMPRA" : "❓ CONSULTA TÉCNICA";
+
+    const text = `¡Hola Kaori Store! 👋
+  
+*${titulo}*
+--------------------------
+📦 *Art:* ${producto.nombre.toUpperCase()}
+✨ *Estado:* ${producto.estado === "usado" ? "Usado / Outlet" : "Nuevo"}${detallesCompra}${gpsPart}
+
+_Enviado desde kaori-store.vercel.app_`;
+
     window.open(`https://wa.me/59174244882?text=${encodeURIComponent(text)}`);
   };
 
@@ -152,7 +170,7 @@ export default function ModalDetalle({
             <div className="flex justify-between items-center mb-4">
               <div className="flex flex-col">
                 <h2 className="text-[36px] font-[1000] text-[#1F2937] italic leading-none tracking-tighter">
-                  BOB {producto.precio}
+                  <span>{Number(producto.precio).toFixed(2)}Bs </span>
                 </h2>
                 <span className="text-[10px] text-emerald-600 font-black uppercase mt-1">
                   Disponibilidad Inmediata
@@ -244,19 +262,36 @@ export default function ModalDetalle({
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                             Disponibilidad
                           </span>
-                          <span className="text-[11px] font-black text-[#1F2937] uppercase">
-                            {producto.stock > 0
-                              ? "Inmediata (Stock Real)"
-                              : "Consultar"}
-                          </span>
+                          <div className="text-right">
+                            <span
+                              className={`text-[11px] font-black uppercase ${
+                                producto.stock <= 3 && producto.stock > 0
+                                  ? "text-orange-500 animate-pulse"
+                                  : producto.stock > 0
+                                    ? "text-[#1F2937]"
+                                    : "text-red-500"
+                              }`}
+                            >
+                              {producto.stock > 0
+                                ? `${producto.stock} Unidades en stock`
+                                : "Sin stock inmediato"}
+                            </span>
+
+                            {/* Mensaje de urgencia si quedan 3 o menos */}
+                            {producto.stock <= 3 && producto.stock > 0 && (
+                              <p className="text-[8px] font-black text-orange-400 uppercase leading-none mt-1">
+                                ¡Últimas unidades!
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex justify-between items-center py-2 border-b border-gray-50">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            Interés
+                            Despacho
                           </span>
-                          <span className="text-[11px] font-black text-[#1F2937] uppercase">
-                            {producto.consultas || 0} Consultas hoy
+                          <span className="text-[11px] font-black text-orange-600 uppercase">
+                            Inmediato (24-48 hrs)
                           </span>
                         </div>
 
@@ -264,8 +299,16 @@ export default function ModalDetalle({
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                             Estado
                           </span>
-                          <span className="text-[11px] font-black text-emerald-600 uppercase italic">
-                            Nuevo / Sellado
+                          <span
+                            className={`text-[11px] font-black uppercase italic ${
+                              producto.estado === "usado"
+                                ? "text-amber-600"
+                                : "text-emerald-600"
+                            }`}
+                          >
+                            {producto.estado === "usado"
+                              ? "Usado / Outlet"
+                              : "Nuevo / Sellado"}
                           </span>
                         </div>
                       </div>
@@ -345,10 +388,10 @@ export default function ModalDetalle({
 
                           <div className="flex items-center gap-2">
                             <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                              Destino vinculado:
+                              Destino:
                             </p>
                             <span className="text-[11px] text-orange-600 font-black uppercase underline decoration-orange-200 decoration-2 underline-offset-2">
-                              {regionNombre || "Pendiente de Sincronización"}
+                              {regionNombre || "Pendiente de Destino"}
                             </span>
                           </div>
                         </div>
@@ -774,6 +817,9 @@ export default function ModalDetalle({
           </button>
 
           <button
+            // ─── BLOQUEO FÍSICO ───
+            // Se bloquea si el stock es 0 o menor
+            disabled={producto.stock <= 0}
             onClick={() => {
               if (!ubicacion) {
                 setActiveTab("envío");
@@ -788,20 +834,26 @@ export default function ModalDetalle({
               }
             }}
             className={`w-full flex items-center gap-4 rounded-[22px] px-5 py-4 transition-all duration-700 active:scale-[0.96] shadow-lg ${
-              ubicacion
-                ? "bg-[#F97316] shadow-orange-500/40 border-transparent"
-                : "bg-white border-[2px] border-orange-100 shadow-sm"
+              producto.stock <= 0
+                ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-70 shadow-none" // Estilo Agotado
+                : ubicacion
+                  ? "bg-[#F97316] shadow-orange-500/40 border-transparent"
+                  : "bg-white border-[2px] border-orange-100 shadow-sm"
             }`}
           >
-            {/* Ícono izquierdo */}
+            {/* Ícono izquierdo dinámico */}
             <div
               className={`w-[44px] h-[44px] rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all duration-500 ${
-                ubicacion
-                  ? "bg-white/20 rotate-[360deg]"
-                  : "bg-orange-50 border border-orange-100"
+                producto.stock <= 0
+                  ? "bg-gray-200 text-gray-400"
+                  : ubicacion
+                    ? "bg-white/20 rotate-[360deg]"
+                    : "bg-orange-50 border border-orange-100"
               }`}
             >
-              {ubicacion ? (
+              {producto.stock <= 0 ? (
+                "🚫"
+              ) : ubicacion ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                 </svg>
@@ -822,29 +874,45 @@ export default function ModalDetalle({
               )}
             </div>
 
-            {/* Texto central CENTRADO y mejorado */}
+            {/* Texto central dinámico */}
             <div className="flex flex-col items-start flex-1 min-w-0">
               <span
                 className={`text-[15px] font-[1000] uppercase italic tracking-tighter leading-none transition-colors duration-500 ${
-                  ubicacion ? "text-white" : "text-[#F97316]"
+                  producto.stock <= 0
+                    ? "text-gray-400"
+                    : ubicacion
+                      ? "text-white"
+                      : "text-[#F97316]"
                 }`}
               >
-                {ubicacion ? "¡VAMOS A PAGARLO!" : "COMPRALO AHORA"}
+                {producto.stock <= 0
+                  ? "ARTÍCULO AGOTADO"
+                  : ubicacion
+                    ? "¡VAMOS A PAGARLO!"
+                    : "COMPRALO AHORA"}
               </span>
               <span
                 className={`text-[9px] font-black uppercase mt-1.5 tracking-widest transition-colors duration-500 ${
-                  ubicacion ? "text-white/80" : "text-orange-400"
+                  producto.stock <= 0
+                    ? "text-gray-300"
+                    : ubicacion
+                      ? "text-white/80"
+                      : "text-orange-400"
                 }`}
               >
-                {ubicacion
-                  ? "Toca para comprar"
-                  : "Dinos dónde lo recibes para avanzar"}
+                {producto.stock <= 0
+                  ? "No disponible por el momento"
+                  : ubicacion
+                    ? "Toca para comprar"
+                    : "Dinos dónde lo recibes para avanzar"}
               </span>
             </div>
 
-            {/* Icono derecho */}
+            {/* Icono derecho dinámico */}
             <div className="transition-all duration-500">
-              {ubicacion ? (
+              {producto.stock <= 0 ? (
+                <span className="text-gray-300">⌛</span>
+              ) : ubicacion ? (
                 <div className="bg-white/20 p-1.5 rounded-full animate-pulse">
                   <svg
                     className="w-4 h-4 text-white"

@@ -157,6 +157,7 @@ export default function CatalogoKaori() {
     { id: "Todo", icon: "✨", label: "Novedades" },
     { id: "Tecno", icon: "🎧", label: "Tecnología y Accesorios" },
     { id: "Electro", icon: "🏠", label: "Electrodomésticos" },
+    { id: "PetShop", icon: "🐶", label: "Pet Shop / Mascotas" },
     { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
     { id: "PDF", icon: "📑", label: "Libros y PDFs" },
     { id: "Digital", icon: "🎮", label: "Juegos y Licencias" },
@@ -192,6 +193,7 @@ export default function CatalogoKaori() {
     const coincideOferta = !soloOfertas || (p.descuento && p.descuento !== "");
     const coincideCat =
       categoriaSel === "Todo" ||
+      p.categoria === categoriaSel ||
       p.descripcion?.toLowerCase().includes(categoriaSel.toLowerCase()) ||
       p.categoria?.toLowerCase().includes(categoriaSel.toLowerCase()) ||
       p.nombre?.toLowerCase().includes(categoriaSel.toLowerCase());
@@ -456,7 +458,8 @@ export default function CatalogoKaori() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setBuscadorVisible(false)}
-              className="absolute inset-0 bg-[#1F2937]/50 backdrop-blur-md pointer-events-auto"
+              // Degradado que desaparece hacia abajo
+              className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent pointer-events-auto"
             />
             <motion.div
               initial={{ y: -50, opacity: 0 }}
@@ -523,7 +526,7 @@ export default function CatalogoKaori() {
           </h2>
         </div>
         <div className="bg-white px-4 py-1.5 rounded-full border border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest shadow-sm">
-          {productosFiltrados.length} Items
+          {productosFiltrados.length} Productos
         </div>
       </div>
 

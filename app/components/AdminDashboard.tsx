@@ -19,6 +19,7 @@ interface Producto {
   stock?: number;
   consultas?: number;
   categoria?: string;
+  estado?: string;
 }
 
 type FormState = {
@@ -30,6 +31,7 @@ type FormState = {
   descuento: string;
   stock: string;
   categoria: string;
+  estado: string;
 };
 
 const FORM_VACIO: FormState = {
@@ -41,6 +43,7 @@ const FORM_VACIO: FormState = {
   descuento: "",
   stock: "",
   categoria: "Todo",
+  estado: "nuevo",
 };
 
 const OPCIONES_CATEGORIA = [
@@ -51,6 +54,11 @@ const OPCIONES_CATEGORIA = [
   { id: "PDF", label: "Libros y PDFs" },
   { id: "Digital", label: "Juegos y Licencias" },
   { id: "Outlet", label: "Ofertas Outlet" },
+  { id: "PetShop", label: "Pet Shop / Mascotas" },
+];
+const OPCIONES_ESTADO = [
+  { id: "nuevo", label: "✨ Nuevo / Sellado" },
+  { id: "usado", label: "♻️ Usado / Outlet" },
 ];
 
 const ITEMS_POR_PAGINA = 10;
@@ -283,6 +291,7 @@ export default function AdminDashboardKaori() {
       descuento: p.descuento ?? "",
       stock: p.stock !== undefined ? String(p.stock) : "",
       categoria: p.categoria || "Todo",
+      estado: p.estado || "nuevo",
     });
     setSeccion("agregar");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -314,6 +323,7 @@ export default function AdminDashboardKaori() {
       let urlPrincipal = form.imagen;
       let urlsGaleria = form.galeria ? form.galeria.split(",") : [];
 
+      // ... (Mantenemos tu lógica de subida de imágenes igual)
       if (fPrincipal) {
         const nom = `${Date.now()}_main.png`;
         const { error: uploadError } = await supabase.storage
@@ -337,6 +347,28 @@ export default function AdminDashboardKaori() {
         urlsGaleria = [...urlsGaleria, ...nuevasUrls];
       }
 
+      // ─── LÓGICA DE STOCK INTELIGENTE ───
+      const nuevoStock = parseInt(form.stock) || 0;
+      let nuevosVendidos = 0;
+
+      if (idEditando) {
+        // Buscamos el producto actual en nuestro estado para comparar
+        const productoOriginal = productos.find((p) => p.id === idEditando);
+        if (productoOriginal) {
+          const stockAnterior = productoOriginal.stock || 0;
+          const vendidosAnteriores = productoOriginal.vendidos || 0;
+          const diferencia = stockAnterior - nuevoStock;
+
+          // Si la diferencia es positiva, es una venta
+          if (diferencia > 0) {
+            nuevosVendidos = vendidosAnteriores + diferencia;
+          } else {
+            // Si el stock subió o es igual, mantenemos los vendidos que ya tenía
+            nuevosVendidos = vendidosAnteriores;
+          }
+        }
+      }
+
       const datos: any = {
         nombre: form.nombre,
         precio: parseFloat(form.precio),
@@ -344,14 +376,19 @@ export default function AdminDashboardKaori() {
         imagen: urlPrincipal,
         galeria: urlsGaleria.join(","),
         descuento: form.descuento || null,
-        stock: form.stock ? parseInt(form.stock) : 0,
+        stock: nuevoStock,
         categoria: form.categoria || "Todo",
+        estado: form.estado,
+        vendidos: nuevosVendidos, // 👈 Guardamos el cálculo automático
       };
 
       if (idEditando) {
         await supabase.from("productos").update(datos).eq("id", idEditando);
       } else {
-        await supabase.from("productos").insert([{ ...datos, consultas: 0 }]);
+        // Si es producto nuevo, empieza con 0 vendidos y 0 consultas
+        await supabase
+          .from("productos")
+          .insert([{ ...datos, vendidos: 0, consultas: 0 }]);
       }
 
       cancelarEdicion();
@@ -543,6 +580,7 @@ export default function AdminDashboardKaori() {
                       <Campo label="Nombre">
                         <input
                           type="text"
+                          placeholder="nombre del producto"
                           value={form.nombre}
                           onChange={(e) =>
                             setForm({ ...form, nombre: e.target.value })
@@ -579,6 +617,9 @@ export default function AdminDashboardKaori() {
                         <Campo label="Precio (Bs)">
                           <input
                             type="number"
+                            // El step="0.01" permite subir de a 1 centavo y habilita los decimales en el formulario
+                            step="0.01"
+                            placeholder="precio con centavos"
                             value={form.precio}
                             onChange={(e) =>
                               setForm({ ...form, precio: e.target.value })
@@ -601,6 +642,7 @@ export default function AdminDashboardKaori() {
                       </div>
                       <Campo label="Descripción">
                         <textarea
+                          placeholder="describe tu producto"
                           value={form.descripcion}
                           onChange={(e) =>
                             setForm({ ...form, descripcion: e.target.value })
@@ -614,12 +656,33 @@ export default function AdminDashboardKaori() {
                       <Campo label="Stock (Unidades)">
                         <input
                           type="number"
+                          placeholder="cuantos tienes?"
                           value={form.stock}
                           onChange={(e) =>
                             setForm({ ...form, stock: e.target.value })
                           }
                           className={inputCls}
                         />
+                      </Campo>
+                      <Campo label="Condición del Artículo">
+                        <div className="flex gap-2">
+                          {OPCIONES_ESTADO.map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() =>
+                                setForm({ ...form, estado: opt.id })
+                              }
+                              className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                                form.estado === opt.id
+                                  ? "bg-orange-600 border-transparent text-white shadow-lg shadow-orange-900/20"
+                                  : "bg-white/5 border-white/10 text-gray-500 hover:border-orange-500/50"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
                       </Campo>
                       <Campo label="Foto principal">
                         <input

@@ -68,7 +68,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
     if (vendidosCalculados < 3) {
       return {
-        text: "🆕 Nuevo",
+        text: "Recien añadido",
         style: "bg-orange-400/10 border-orange-400/20 text-orange-500",
       };
     }
@@ -177,9 +177,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
               <span className="text-[#F97316] text-xs font-bold uppercase">
                 Bs
               </span>
-              <span className="text-2xl font-black text-[#1F2937]">
-                {producto.precio}
-              </span>
+              <span>{Number(producto.precio).toFixed(2)}</span>
             </div>
           </div>
 
@@ -205,11 +203,13 @@ export default function TarjetaProducto({ producto, onClick }: any) {
             </span>
             <span>•</span>
             <span
-              className={
-                vendidosCalculados > 0 ? "text-[#F97316] font-bold" : ""
-              }
+              className={`text-[10px] uppercase italic tracking-tighter ${
+                producto.vendidos > 0
+                  ? "text-[#F97316] font-[1000] drop-shadow-[0_0_5px_rgba(249,115,22,0.2)]"
+                  : "text-gray-400 font-bold"
+              }`}
             >
-              🛒 {vendidosCalculados}
+              🛒 {producto.vendidos > 0 ? `${producto.vendidos}` : "Nuevo"}
             </span>
           </div>
         </div>
