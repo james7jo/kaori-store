@@ -713,7 +713,7 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
               CERRAR PEDIDO
             </span>
             <span className="text-[9px] font-bold opacity-80 uppercase tracking-[0.2em] mt-2">
-              PAGO CONTRA ENTREGA / TRANSFERENCIA
+              PAGO QR / TRANSFERENCIA
             </span>
           </button>
         </div>
