@@ -20,14 +20,14 @@ export default function ModalDetalle({
   ubicacion,
   regionNombre,
   vincularGps,
+  loadingGps,
+  modoManual,
+  setModoManual,
 }: Props) {
   // ─── ESTADOS DE CONTROL ───
-  const [modoManual, setModoManual] = useState(false);
   const [textoCiudad, setTextoCiudad] = useState("");
   const [ciudadManual, setCiudadManual] = useState("");
   const [indexFoto, setIndexFoto] = useState(0);
-
-  const [loadingGps, setLoadingGps] = useState(false);
   const [cantidad, setCantidad] = useState(1);
   const [showImageModal, setShowImageModal] = useState(false);
   const [activeTab, setActiveTab] = useState("detalle");
@@ -48,58 +48,6 @@ export default function ModalDetalle({
       document.body.style.overflow = "unset";
     };
   }, []);
-
-  // ─── LÓGICA GPS DIRECTA ───
-  const obtenerUbicacion = () => {
-    setLoadingGps(true);
-    if (!navigator.geolocation) {
-      setLoadingGps(false);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const urlMaps = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
-        let nombreDetectado = "Ubicación Detectada ✅";
-
-        // Detección de Región para Bolivia
-        if (
-          latitude > -18 &&
-          latitude < -16.5 &&
-          longitude > -67 &&
-          longitude < -65.5
-        ) {
-          nombreDetectado = "Cochabamba y Valles";
-        } else if (
-          latitude > -17 &&
-          latitude < -15.5 &&
-          longitude > -69 &&
-          longitude < -67.5
-        ) {
-          nombreDetectado = "La Paz / Altiplano";
-        } else if (
-          latitude > -18.5 &&
-          latitude < -17 &&
-          longitude > -64 &&
-          longitude < -62
-        ) {
-          nombreDetectado = "Santa Cruz / Oriente";
-        }
-        // 2. 🔥 EL SECRETO: Guardamos en el celular para que sea GLOBAL
-        localStorage.setItem("ubicacion_kaori", urlMaps);
-        localStorage.setItem("region_kaori", nombreDetectado);
-
-        setLoadingGps(false);
-      },
-      () => {
-        setLoadingGps(false);
-        // Si el cliente niega el GPS, no hacemos nada,
-        // el botón manual que pondremos en el modal se encargará.
-      },
-      { enableHighAccuracy: true },
-    );
-  };
 
   const enviarWhatsApp = (accion: "compra" | "consulta") => {
     const gpsPart = ubicacion
