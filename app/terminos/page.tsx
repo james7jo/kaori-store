@@ -4,7 +4,11 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 
 export default function TerminosPage() {
+  const [cargando, setCargando] = React.useState(false);
+
   const celebrarYVolver = () => {
+    setCargando(true); // 👈 Activamos el texto de redirigiendo
+
     const end = Date.now() + 3 * 1000;
     const colors = [
       "#ff0000",
@@ -38,7 +42,6 @@ export default function TerminosPage() {
       window.location.href = "/";
     }, 2000);
   };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans p-4 md:p-10">
       <div className="max-w-4xl mx-auto bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[3rem] overflow-hidden border border-slate-100">
@@ -218,9 +221,21 @@ export default function TerminosPage() {
               </span>
               <button
                 onClick={celebrarYVolver}
-                className="text-[10px] font-[1000] uppercase italic text-[#F97316] bg-orange-50 px-10 py-4 rounded-full hover:bg-[#F97316] hover:text-white transition-all active:scale-95 shadow-sm"
+                disabled={cargando}
+                className={`text-[10px] font-[1000] uppercase italic px-10 py-4 rounded-full transition-all active:scale-95 shadow-sm flex items-center gap-2 ${
+                  cargando
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    : "bg-orange-50 text-[#F97316] hover:bg-[#F97316] hover:text-white"
+                }`}
               >
-                Acepto y deseo comprar
+                {cargando ? (
+                  <>
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-pulse"></span>
+                    Redirigiendo...
+                  </>
+                ) : (
+                  "Acepto y deseo comprar"
+                )}
               </button>
             </div>
           </div>
