@@ -31,6 +31,10 @@ export default function VistaCarrito({
   regionNombre, // <--- AÑADE ESTO
   vincularGps,
 }: Props) {
+  console.log(
+    "IDs actuales en el carrito:",
+    carrito.map((i) => i.id),
+  );
   useEffect(() => {
     if (isOpen) {
       window.history.pushState({ cartOpen: true }, "");
@@ -108,9 +112,12 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div key="carrito-wrapper-global">
+          {" "}
+          {/*
           {/* Fondo desenfocado profesional */}
           <motion.div
+            key="backdrop-oscuro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -120,8 +127,8 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
             }}
             className="fixed inset-0 bg-[#1F2937]/80 backdrop-blur-md z-[90]"
           />
-
           <motion.div
+            key="panel-blanco-carrito"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -170,10 +177,10 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
                   </p>
                 </div>
               ) : (
-                carrito.map((item) => (
+                carrito.map((item, index) => (
                   <motion.div
                     layout
-                    key={item.id}
+                    key={`item-${item.id || "sin-id"}-${index}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white p-5 rounded-[2.5rem] shadow-[0_10px_30px_rgba(249,115,22,0.05)] border border-orange-100/50 flex gap-5 group relative"
@@ -338,7 +345,7 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
               </div>
             )}
           </motion.div>
-        </>
+        </div>
       )}
 
       <style jsx>{`
