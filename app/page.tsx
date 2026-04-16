@@ -24,6 +24,7 @@ export default function CatalogoKaori() {
   const [loading, setLoading] = useState(true);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [buscadorVisible, setBuscadorVisible] = useState(false);
+  const [modoManual, setModoManual] = useState(false);
   // 1. Declaramos el carrito, pero primero intentamos leer si ya tiene algo guardado
   const [carrito, setCarrito] = useState<any[]>([]);
 
@@ -76,35 +77,27 @@ export default function CatalogoKaori() {
   // Esta es la función que disparará el GPS
   const vincularGps = () => {
     setLoadingGps(true);
+    setModoManual(false); // Reiniciamos el modo manual al intentar de nuevo
 
-    if (!navigator.geolocation) {
-      alert(
-        "Tu navegador no soporta GPS, por favor escribe tu ciudad manualmente.",
-      );
+    const emergencia = setTimeout(() => {
+      // 🚨 Si después de 8 segundos seguimos cargando, abortamos
       setLoadingGps(false);
-      return;
-    }
+      setModoManual(true);
+      console.log("Emergencia activada: GPS muy lento o apagado");
+    }, 8000);
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-        const nombreRegion = "Ubicación por GPS ✅";
-
-        setUbicacion(coords);
-        setRegionNombre(nombreRegion);
-
-        localStorage.setItem("ubicacion_kaori", coords);
-        localStorage.setItem("region_kaori", nombreRegion);
-
+        clearTimeout(emergencia);
+        // ... resto de tu lógica de éxito (coords, localStorage, etc)
         setLoadingGps(false);
       },
       (error) => {
-        // Silencio total en la interfaz, solo un aviso para ti en consola
-        console.warn("GPS no disponible, pasando a modo manual.");
+        clearTimeout(emergencia);
         setLoadingGps(false);
-        // Borramos el alert() feo de aquí.
+        setModoManual(true); // Activa el cuadro de texto si hay error (permiso denegado, etc)
       },
-      { timeout: 10000 }, // Si en 10 segundos no responde, da error (evita el loading infinito)
+      { enableHighAccuracy: true, timeout: 8000 },
     );
   };
   // ─── FUNCIÓN MAESTRA PARA CONECTAR MODAL Y CARRITO ───

@@ -427,47 +427,66 @@ export default function ModalDetalle({
                             </motion.div>
                           )}
 
-                          {/* 2. EL BOTÓN GPS (Solo si no hay ubicación y no estamos en modo manual) */}
+                          {/* 2. EL BOTÓN GPS (NUEVA VERSIÓN BLINDADA) */}
                           {!ubicacion && !modoManual && (
-                            <>
+                            <div className="space-y-3">
                               <button
+                                disabled={loadingGps}
                                 onClick={vincularGps}
-                                className={`w-full overflow-hidden relative group transition-all duration-500 bg-orange-50/50 border-orange-200 shadow-sm ${loadingGps ? "cursor-wait" : "animate-pulse active:scale-95"} border-2 rounded-[2rem] p-[3px]`}
+                                className={`w-full overflow-hidden relative group transition-all duration-500 border-2 rounded-[2rem] p-[3px] 
+        ${
+          loadingGps
+            ? "bg-gray-100 border-gray-200 cursor-wait"
+            : "bg-orange-50/50 border-[#F97316] shadow-lg animate-pulse active:scale-95"
+        }`}
                               >
-                                <div className="flex items-center justify-between px-5 py-5 rounded-[1.7rem] bg-white">
+                                <div
+                                  className={`flex items-center justify-between px-5 py-5 rounded-[1.7rem] transition-colors ${loadingGps ? "bg-gray-50" : "bg-white"}`}
+                                >
                                   <div className="flex items-center gap-4">
                                     <div
-                                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${loadingGps ? "bg-gray-200" : "bg-orange-500 text-white shadow-orange-200"}`}
+                                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${loadingGps ? "bg-gray-300" : "bg-[#F97316] shadow-orange-200"}`}
                                     >
                                       {loadingGps ? (
-                                        <span className="animate-spin text-xl">
+                                        <span className="animate-spin text-xl text-white">
                                           ⏳
                                         </span>
                                       ) : (
-                                        "📍"
+                                        <span className="text-xl text-white">
+                                          📍
+                                        </span>
                                       )}
                                     </div>
                                     <div className="text-left">
-                                      <p className="text-[10px] font-black uppercase tracking-[2px] leading-none text-orange-600">
-                                        Punto de Entrega
+                                      <p
+                                        className={`text-[10px] font-black uppercase tracking-[2px] leading-none ${loadingGps ? "text-gray-400" : "text-[#F97316]"}`}
+                                      >
+                                        {loadingGps
+                                          ? "Sincronizando..."
+                                          : "Punto de Entrega"}
                                       </p>
                                       <p className="text-[14px] font-[1000] text-slate-800 mt-1 uppercase italic tracking-tighter">
                                         {loadingGps
-                                          ? "Conectando satélite..."
-                                          : "¿A dónde lo enviamos?"}
+                                          ? "Buscando satélite..."
+                                          : "¡Tocar aquí para continuar!"}
                                       </p>
                                     </div>
                                   </div>
+                                  {!loadingGps && (
+                                    <div className="bg-orange-100 text-[#F97316] px-3 py-1 rounded-full text-[9px] font-black uppercase animate-bounce border border-orange-200">
+                                      Necesario
+                                    </div>
+                                  )}
                                 </div>
                               </button>
 
                               <button
                                 onClick={() => setModoManual(true)}
-                                className="w-full text-center text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-[#F97316] transition-colors"
+                                className="w-full text-center text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-[#F97316] transition-colors"
                               >
                                 — o escribir ciudad manualmente —
                               </button>
-                            </>
+                            </div>
                           )}
 
                           {/* 3. PLAN B: INPUT MANUAL (Ahora con diseño premium) */}
