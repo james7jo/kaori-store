@@ -26,6 +26,7 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const dragX = useMotionValue(0);
+  const gpsRef = useRef<HTMLDivElement>(null); // Añade esto donde están los otros useRef
 
   // ─── BLOQUEO DE SCROLL DEL BODY ───
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
       ? `\n📍 *Ubicación (${regionNombre}):* ${ubicacion}`
       : "\n📍 *Región:* Por coordinar";
     const total = producto.precio * cantidad;
-    const text = `¡Hola Kaori Store! 👋\n${accion === "compra" ? "*SOLICITUD DE COMPRA*" : "*CONSULTA DE PRODUCTO*"} \n📦 *Art:* ${producto.nombre.toUpperCase()}\n🔢 *Cant:* ${cantidad}\n💰 *Total:* BOB ${total}${gpsPart}\n\n_Hecho en KaoriStore.bo_`;
+    const text = `¡Hola Kaori Store! 👋\n${accion === "compra" ? "*SOLICITUD DE COMPRA*" : "*CONSULTA DE PRODUCTO*"} \n📦 *Art:* ${producto.nombre.toUpperCase()}\n🔢 *Cant:* ${cantidad}\n💰 *Total:* BOB ${total}${gpsPart}\n\n_kaori-store.vercel.app_`;
     window.open(`https://wa.me/59174244882?text=${encodeURIComponent(text)}`);
   };
 
@@ -386,33 +387,33 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
                       </div>
                     </div>
 
-                    <div className="p-5 space-y-4">
+                    <div ref={gpsRef} className="w-full pt-2">
                       {/* Botón GPS Mejorado */}
                       <button
                         onClick={obtenerUbicacion}
-                        className={`w-full overflow-hidden relative group transition-all duration-300 ${
+                        className={`w-full overflow-hidden relative group transition-all duration-500 ${
                           ubicacion
-                            ? "bg-white border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-                            : "bg-white border-slate-200 shadow-sm active:bg-slate-50"
-                        } border-2 rounded-2xl p-[2px]`}
+                            ? "bg-white border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)] scale-[1.02]"
+                            : "bg-orange-50/50 border-orange-200 shadow-sm animate-pulse active:scale-95"
+                        } border-2 rounded-[2rem] p-[3px]`}
                       >
                         <div
-                          className={`flex items-center justify-between px-5 py-4 rounded-[14px] ${
+                          className={`flex items-center justify-between px-5 py-5 rounded-[1.7rem] transition-colors duration-500 ${
                             ubicacion ? "bg-emerald-50/30" : "bg-white"
                           }`}
                         >
                           <div className="flex items-center gap-4">
-                            {/* Icono de Radar/GPS Dinámico */}
+                            {/* Icono Dinámico */}
                             <div
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${
                                 ubicacion
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-slate-100 text-slate-400"
+                                  ? "bg-emerald-500 text-white rotate-[360deg]"
+                                  : "bg-orange-500 text-white shadow-orange-200"
                               }`}
                             >
                               {loadingGps ? (
                                 <svg
-                                  className="animate-spin h-5 w-5"
+                                  className="animate-spin h-6 w-6 text-white"
                                   viewBox="0 0 24 24"
                                 >
                                   <circle
@@ -432,70 +433,62 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
                                 </svg>
                               ) : (
                                 <svg
-                                  className="w-5 h-5"
+                                  className="w-6 h-6"
                                   fill="none"
                                   stroke="currentColor"
                                   strokeWidth="2.5"
                                   viewBox="0 0 24 24"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                                  />
+                                  {ubicacion ? (
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  ) : (
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                                    />
+                                  )}
                                 </svg>
                               )}
                             </div>
 
                             <div className="text-left">
-                              <p
-                                className={`text-[10px] font-black uppercase tracking-[1.5px] leading-none ${
-                                  ubicacion
-                                    ? "text-emerald-600"
-                                    : "text-slate-400"
-                                }`}
-                              >
+                              <div className="flex items-center gap-2">
+                                <p
+                                  className={`text-[10px] font-black uppercase tracking-[2px] leading-none ${ubicacion ? "text-emerald-600" : "text-orange-600"}`}
+                                >
+                                  {ubicacion
+                                    ? "Logística Lista"
+                                    : "Punto de Entrega"}
+                                </p>
+                                {!ubicacion && !loadingGps && (
+                                  <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-ping"></span>
+                                )}
+                              </div>
+                              <p className="text-[14px] font-[1000] text-slate-800 mt-1 uppercase italic tracking-tighter">
                                 {loadingGps
-                                  ? "Protocolo de Rastreo"
-                                  : "Ubicación"}
-                              </p>
-                              <p className="text-[12px] font-[1000] text-slate-800 mt-1.5 uppercase">
-                                {loadingGps
-                                  ? "Sincronizando..."
+                                  ? "Buscando..."
                                   : ubicacion
-                                    ? "Ubicación Verificada"
-                                    : "Vincular GPS para Envío"}
+                                    ? "Destino Confirmado ✓"
+                                    : "¿A dónde lo enviamos?"}
                               </p>
                             </div>
                           </div>
 
-                          {/* Indicador de Estado Lado Derecho */}
+                          {/* Estado Derecho */}
                           <div className="flex flex-col items-end">
                             {ubicacion ? (
-                              <div className="flex items-center gap-1.5">
-                                <span className="flex h-2 w-2 relative">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span className="text-[9px] font-black text-emerald-600 uppercase">
-                                  Online
-                                </span>
+                              <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-black uppercase">
+                                Listo
                               </div>
                             ) : (
-                              <svg
-                                className="w-4 h-4 text-slate-300"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                viewBox="0 0 24 24"
-                              >
-                                <polyline points="9 18 15 12 9 6" />
-                              </svg>
+                              <div className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[9px] font-black uppercase animate-bounce">
+                                Tocar Aquí
+                              </div>
                             )}
                           </div>
                         </div>
@@ -706,15 +699,108 @@ export default function ModalDetalle({ producto, onClose, onAgregar }: Props) {
           </button>
 
           <button
-            onClick={() => enviarWhatsApp("compra")}
-            className="flex-1 bg-[#F97316] text-white rounded-[2rem] flex flex-col items-center justify-center shadow-2xl shadow-orange-500/30 active:scale-[0.97] transition-all py-5"
+            onClick={() => {
+              if (!ubicacion) {
+                setActiveTab("envío");
+                setTimeout(() => {
+                  gpsRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                }, 100);
+              } else {
+                enviarWhatsApp("compra");
+              }
+            }}
+            className={`w-full flex items-center gap-4 rounded-[22px] px-5 py-4 transition-all duration-700 active:scale-[0.96] shadow-lg ${
+              ubicacion
+                ? "bg-[#F97316] shadow-orange-500/40 border-transparent"
+                : "bg-white border-[2px] border-orange-100 shadow-sm"
+            }`}
           >
-            <span className="text-[18px] font-[1000] uppercase italic tracking-widest leading-none">
-              CERRAR PEDIDO
-            </span>
-            <span className="text-[9px] font-bold opacity-80 uppercase tracking-[0.2em] mt-2">
-              PAGO QR / TRANSFERENCIA
-            </span>
+            {/* Ícono izquierdo */}
+            <div
+              className={`w-[44px] h-[44px] rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all duration-500 ${
+                ubicacion
+                  ? "bg-white/20 rotate-[360deg]"
+                  : "bg-orange-50 border border-orange-100"
+              }`}
+            >
+              {ubicacion ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="#F97316"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.806H14.25M16.5 18.75h-2.25m0-11.25v-1.125c0-.621-.504-1.125-1.125-1.125h-2.25a1.125 1.125 0 00-1.125 1.125V7.5m4.5 0h-4.5m4.5 0v6.75M9 7.5v6.75m0 0h7.5"
+                  />
+                </svg>
+              )}
+            </div>
+
+            {/* Texto central CENTRADO y mejorado */}
+            <div className="flex flex-col items-start flex-1 min-w-0">
+              <span
+                className={`text-[15px] font-[1000] uppercase italic tracking-tighter leading-none transition-colors duration-500 ${
+                  ubicacion ? "text-white" : "text-[#F97316]"
+                }`}
+              >
+                {ubicacion ? "¡VAMOS A PAGARLO!" : "COMPRALO AHORA"}
+              </span>
+              <span
+                className={`text-[9px] font-black uppercase mt-1.5 tracking-widest transition-colors duration-500 ${
+                  ubicacion ? "text-white/80" : "text-orange-400"
+                }`}
+              >
+                {ubicacion
+                  ? "Toca para comprar"
+                  : "Dinos dónde lo recibes para avanzar"}
+              </span>
+            </div>
+
+            {/* Icono derecho */}
+            <div className="transition-all duration-500">
+              {ubicacion ? (
+                <div className="bg-white/20 p-1.5 rounded-full animate-pulse">
+                  <svg
+                    className="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 12.75l6 6 9-13.5"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                <svg
+                  className="w-5 h-5 text-orange-200"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+                  />
+                </svg>
+              )}
+            </div>
           </button>
         </div>
       </motion.div>
