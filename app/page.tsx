@@ -77,25 +77,60 @@ export default function CatalogoKaori() {
   // Esta es la función que disparará el GPS
   const vincularGps = () => {
     setLoadingGps(true);
-    setModoManual(false); // Reiniciamos el modo manual al intentar de nuevo
+    setModoManual(false);
 
+    // 1. Reloj de emergencia (8 segundos)
     const emergencia = setTimeout(() => {
-      // 🚨 Si después de 8 segundos seguimos cargando, abortamos
-      setLoadingGps(false);
-      setModoManual(true);
-      console.log("Emergencia activada: GPS muy lento o apagado");
+      if (!ubicacion) {
+        // Si después de 8 seg no hay nada, abortamos
+        setLoadingGps(false);
+        setModoManual(true);
+        console.log("GPS muy lento, activando modo manual");
+      }
     }, 8000);
 
+    // 2. Pedir coordenadas al satélite
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
+        // 'async' es para que la API de mapas funcione
         clearTimeout(emergencia);
-        // ... resto de tu lógica de éxito (coords, localStorage, etc)
+        const { latitude, longitude } = pos.coords;
+        const coordsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        try {
+          // 3. Preguntar a la API qué ciudad es esta latitud/longitud
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+          );
+          const data = await res.json();
+
+          // Sacamos el nombre de la ciudad, pueblo o municipio
+          const nombreDetectado =
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            data.address.county ||
+            "Bolivia (Destino)";
+
+          // 4. Guardar todo en el Cerebro y en el Celular
+          setUbicacion(coordsUrl);
+          setRegionNombre(nombreDetectado);
+          localStorage.setItem("ubicacion_kaori", coordsUrl);
+          localStorage.setItem("region_kaori", nombreDetectado);
+        } catch (error) {
+          // Si el internet está lento y la API de mapas falla, ponemos un nombre genérico
+          setUbicacion(coordsUrl);
+          setRegionNombre("Ubicación Detectada ✅");
+        }
+
         setLoadingGps(false);
       },
       (error) => {
+        // Si el usuario rechaza el GPS o está apagado
         clearTimeout(emergencia);
         setLoadingGps(false);
-        setModoManual(true); // Activa el cuadro de texto si hay error (permiso denegado, etc)
+        setModoManual(true);
+        console.log("Error de GPS, pasando a manual");
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
