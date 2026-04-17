@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// 1. IMPORTAMOS ANALYTICS
+// 1. IMPORTAMOS AMBOS PAQUETES DE VERCEL
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,6 @@ export const metadata: Metadata = {
   creator: "Kaori Store",
   publisher: "Kaori Store",
 
-  // Esto pone a la niña en la pestaña del navegador (Favicon)
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
@@ -47,12 +47,10 @@ export const metadata: Metadata = {
     telephone: false,
   },
 
-  // Verificación de Google Search Console
   verification: {
     google: "WU3MWq1i8dncTHBXXog-paCx9olbTd5siYcIxukvv7Q",
   },
 
-  // Esto hace que Google y WhatsApp muestren la imagen de la niña
   openGraph: {
     title: "Kaori Store",
     description: "¡Envíos a toda Bolivia desde Cochabamba!",
@@ -86,11 +84,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#F8FAFC]">
-        {/* Renderizamos la tienda */}
         {children}
 
-        {/* 2. COMPONENTE DE ANALYTICS (Se coloca aquí para que no interfiera con el renderizado principal) */}
+        {/* 2. HERRAMIENTAS DE MONITOREO DE VERCEL */}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
