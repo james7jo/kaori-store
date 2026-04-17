@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+// 1. IMPORTAMOS ANALYTICS
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
   creator: "Kaori Store",
   publisher: "Kaori Store",
 
-  // 1. Esto pone a la niña en la pestaña del navegador (Favicon)
+  // Esto pone a la niña en la pestaña del navegador (Favicon)
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
@@ -45,12 +47,12 @@ export const metadata: Metadata = {
     telephone: false,
   },
 
-  // 2. Verificación de Google Search Console
+  // Verificación de Google Search Console
   verification: {
     google: "WU3MWq1i8dncTHBXXog-paCx9olbTd5siYcIxukvv7Q",
   },
 
-  // 3. Esto hace que Google y WhatsApp muestren la imagen de la niña
+  // Esto hace que Google y WhatsApp muestren la imagen de la niña
   openGraph: {
     title: "Kaori Store",
     description: "¡Envíos a toda Bolivia desde Cochabamba!",
@@ -58,7 +60,7 @@ export const metadata: Metadata = {
     siteName: "Kaori Store",
     images: [
       {
-        url: "./icon.png",
+        url: "/icon.png",
         width: 1200,
         height: 630,
         alt: "Kaori Store Logo",
@@ -83,7 +85,13 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#F8FAFC]">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#F8FAFC]">
+        {/* Renderizamos la tienda */}
+        {children}
+
+        {/* 2. COMPONENTE DE ANALYTICS (Se coloca aquí para que no interfiera con el renderizado principal) */}
+        <Analytics />
+      </body>
     </html>
   );
 }
