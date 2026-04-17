@@ -14,7 +14,7 @@ import VistaCarrito from "./components/VistaCarrito";
 // Texto Principal: #1F2937 (Gris Pizarra muy oscuro para máxima legibilidad)
 // Acento Principal: #F97316 (Naranja consolidado, transmite energía y acción)
 // Acento Secundario/Hover: #EA580C (Naranja más oscuro para interacciones)
-
+export const dynamic = "force-dynamic";
 export default function CatalogoKaori() {
   const [productos, setProductos] = useState<any[]>([]);
   const [busqueda, setBusqueda] = useState("");
