@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 
   // 1. Esto pone a la niña en la pestaña del navegador (Favicon)
   icons: {
-    icon: "/logo-kaori.png",
-    apple: "/logo-kaori.png",
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 
   formatDetection: {
@@ -54,11 +54,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Kaori Store",
     description: "¡Envíos a toda Bolivia desde Cochabamba!",
-    url: "https://kaori-store.vercel.app",
+    url: "https://kaoristore.shop",
     siteName: "Kaori Store",
     images: [
       {
-        url: "/logo-kaori.png",
+        url: "./icon.png",
         width: 1200,
         height: 630,
         alt: "Kaori Store Logo",
