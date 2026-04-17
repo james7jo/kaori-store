@@ -62,6 +62,50 @@ const OPCIONES_ESTADO = [
 ];
 
 const ITEMS_POR_PAGINA = 10;
+const [subiendoGaleria, setSubiendoGaleria] = useState(false);
+const handleSubirGaleria = async (archivos: File[]) => {
+  setSubiendoGaleria(true);
+  const urlsSubidas: string[] = [];
+
+  try {
+    // Recorremos cada imagen seleccionada
+    for (const archivo of archivos) {
+      const fileExt = archivo.name.split(".").pop();
+      // Creamos un nombre único: producto-ID-random.png
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `galeria-productos/${fileName}`;
+
+      // Subimos al Storage (Asegúrate de que tu bucket se llame 'productos')
+      const { error: uploadError, data } = await supabase.storage
+        .from("productos")
+        .upload(filePath, archivo);
+
+      if (uploadError) {
+        console.error("Error al subir una imagen:", uploadError.message);
+        continue; // Si falla una, sigue con la otra
+      }
+
+      // Obtenemos la URL pública
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("productos").getPublicUrl(filePath);
+
+      urlsSubidas.push(publicUrl);
+    }
+
+    // --- AQUÍ EL PASO CLAVE ---
+    // Ahora 'urlsSubidas' es un array de strings.
+    // Tienes que guardarlo en tu tabla de productos en la columna 'galeria' (que sea tipo JSONB o Text[])
+    console.log("Todas las fotos listas:", urlsSubidas);
+
+    // Actualiza el estado de tu formulario principal con estas URLs
+    // setFormulario({ ...formulario, galeria: urlsSubidas });
+  } catch (error) {
+    alert("Ocurrió un error subiendo la galería");
+  } finally {
+    setSubiendoGaleria(false);
+  }
+};
 
 // ─────────────────────────────────────────────
 // STAT CARD
@@ -692,14 +736,31 @@ export default function AdminDashboardKaori() {
                           className="w-full text-xs text-gray-500 file:bg-orange-600 file:border-none file:px-4 file:py-2 file:rounded-xl file:text-white"
                         />
                       </Campo>
+                      // Pon esto en los estados de tu componente arriba const
+                      [subiendoGaleria, setSubiendoGaleria] = useState(false);
+                      // ... dentro de tu JSX:
                       <Campo label="Galería adicional">
-                        <input
-                          type="file"
-                          id="galeria"
-                          accept="image/*"
-                          multiple
-                          className="w-full text-xs text-gray-500 file:bg-gray-700 file:border-none file:px-4 file:py-2 file:rounded-xl file:text-white"
-                        />
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            id="galeria"
+                            accept="image/*"
+                            multiple
+                            disabled={subiendoGaleria}
+                            className="w-full text-xs text-gray-500 file:bg-[#F97316] file:border-none file:px-4 file:py-2 file:rounded-xl file:text-white file:font-bold file:cursor-pointer disabled:opacity-50"
+                            onChange={(e) => {
+                              const files = e.target.files;
+                              if (files && files.length > 0) {
+                                handleSubirGaleria(Array.from(files)); // Convertimos FileList a Array
+                              }
+                            }}
+                          />
+                          {subiendoGaleria && (
+                            <p className="text-[10px] text-orange-500 animate-pulse font-bold italic">
+                              🚀 Subiendo imágenes a Kaori Store...
+                            </p>
+                          )}
+                        </div>
                       </Campo>
                       {(form.imagen || idEditando) && (
                         <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
