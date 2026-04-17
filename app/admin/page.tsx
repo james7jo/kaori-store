@@ -1,19 +1,28 @@
 "use client";
-import { useState } from "react";
-import dynamic from "next/dynamic"; // 1. Importamos la carga dinámica
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 
-// 2. Cargamos el Dashboard solo en el cliente (SSR: false)
+// Cargamos el Dashboard solo en el cliente
 const AdminDashboard = dynamic(() => import("../components/AdminDashboard"), {
   ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-black flex items-center justify-center text-white">
+      Cargando Panel de Kaori...
+    </div>
+  ),
 });
-
-export const dynamicConfig = "force-dynamic";
 
 export default function AdminPage() {
   const [pass, setPass] = useState("");
   const [autorizado, setAutorizado] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const checkPass = (e: any) => {
+  // 1. Esto asegura que solo ejecutamos hooks cuando el navegador está listo
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const checkPass = (e: React.FormEvent) => {
     e.preventDefault();
     if (pass === "kaori2026") {
       setAutorizado(true);
@@ -22,7 +31,8 @@ export default function AdminPage() {
     }
   };
 
-  // Pantalla de Login (Si esto falla, envuélvelo en un useEffect para asegurar cliente)
+  if (!isMounted) return null; // No renderizamos nada hasta que el cliente esté listo
+
   if (!autorizado) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-white text-center">
@@ -37,7 +47,10 @@ export default function AdminPage() {
             value={pass}
             onChange={(e) => setPass(e.target.value)}
           />
-          <button className="w-full bg-white text-black py-5 rounded-3xl font-black text-lg">
+          <button
+            type="submit"
+            className="w-full bg-white text-black py-5 rounded-3xl font-black text-lg"
+          >
             ENTRAR
           </button>
         </form>
