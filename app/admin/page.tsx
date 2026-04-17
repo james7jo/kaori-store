@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
-// Aquí está el cambio: subimos un nivel para entrar a components
-import AdminDashboard from "../components/AdminDashboard";
-export const dynamic = "force-dynamic";
+import dynamic from "next/dynamic"; // 1. Importamos la carga dinámica
+
+// 2. Cargamos el Dashboard solo en el cliente (SSR: false)
+const AdminDashboard = dynamic(() => import("../components/AdminDashboard"), {
+  ssr: false,
+});
+
+export const dynamicConfig = "force-dynamic";
 
 export default function AdminPage() {
   const [pass, setPass] = useState("");
@@ -17,6 +22,7 @@ export default function AdminPage() {
     }
   };
 
+  // Pantalla de Login (Si esto falla, envuélvelo en un useEffect para asegurar cliente)
   if (!autorizado) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-white text-center">
