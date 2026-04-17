@@ -736,9 +736,6 @@ export default function AdminDashboardKaori() {
                           className="w-full text-xs text-gray-500 file:bg-orange-600 file:border-none file:px-4 file:py-2 file:rounded-xl file:text-white"
                         />
                       </Campo>
-                      // Pon esto en los estados de tu componente arriba const
-                      [subiendoGaleria, setSubiendoGaleria] = useState(false);
-                      // ... dentro de tu JSX:
                       <Campo label="Galería adicional">
                         <div className="space-y-2">
                           <input
