@@ -61,32 +61,53 @@ export default function ModalDetalle({
   }, []);
 
   const enviarWhatsApp = (accion: "compra" | "consulta") => {
-    // Solo mandamos GPS y detalles de dinero si es una COMPRA
-    const gpsPart =
-      accion === "compra" && ubicacion
-        ? `\n📍 *Ubicación (${regionNombre}):* ${ubicacion}`
-        : "";
+    // ─── LOGICA DE DATOS ───
+    const precioFinal = (producto.precio * cantidad).toFixed(2);
+    const fecha = new Date().toLocaleDateString("es-BO"); // Fecha local de Bolivia
 
-    const detallesCompra =
-      accion === "compra"
-        ? `\n🔢 *Cant:* ${cantidad}\n💰 *Total:* BOB ${(producto.precio * cantidad).toFixed(2)}`
-        : "";
-
+    // ─── ESTRUCTURA DEL TICKET (Diseño Visual) ───
+    const separador = "━━━━━━━━━━━━━━━━━━━━━━";
     const titulo =
-      accion === "compra" ? "🛍️ SOLICITUD DE COMPRA" : "❓ CONSULTA TÉCNICA";
+      accion === "compra" ? "🚀 *PEDIDO CONFIRMADO*" : " *CONSULTA TÉCNICA*❓";
 
-    const text = `¡Hola Kaori Store! 👋
-  
-*${titulo}*
---------------------------
-📦 *Art:* ${producto.nombre.toUpperCase()}
-✨ *Estado:* ${producto.estado === "usado" ? "Usado / Outlet" : "Nuevo"}${detallesCompra}${gpsPart}
+    // Cuerpo para COMPRA
+    const cuerpoCompra = `
+*PRODUCTO:*
+• ${producto.nombre.toUpperCase()}
+• Precio Unit: ${producto.precio} Bs.
+• Cantidad: ${cantidad} un.
 
-_Enviado desde kaori-store.vercel.app_`;
+${separador}
+💰 *TOTAL A PAGAR: ${precioFinal} Bs.*
+${separador}
 
-    window.open(`https://wa.me/59174244882?text=${encodeURIComponent(text)}`);
+*📍 DATOS DE ENTREGA:*
+• *Región:* ${regionNombre || "No especificada"}
+${ubicacion ? `• *Mapa:* https://www.google.com/maps?q=${ubicacion}` : "• *Ubicación:* Pendiente de coordinar"}`;
+
+    // Cuerpo para CONSULTA
+    const cuerpoConsulta = `
+*PRODUCTO:*
+• ${producto.nombre.toUpperCase()}
+• Estado: ${producto.estado === "usado" ? "Usado / Outlet" : "Nuevo / Sellado"}
+
+*Duda:* Hola, tengo una consulta sobre este artículo...`;
+
+    // ─── MENSAJE FINAL ───
+    const mensajeCompleto = `¡Hola *KAORI STORE*! 👋
+
+${titulo}
+${separador}
+${accion === "compra" ? cuerpoCompra : cuerpoConsulta}
+${separador}
+
+_Enviado desde: kaoristore.shop_
+_Fecha: ${fecha}_`;
+
+    // Abrir WhatsApp
+    const link = `https://wa.me/59174244882?text=${encodeURIComponent(mensajeCompleto)}`;
+    window.open(link, "_blank");
   };
-
   return (
     <>
       <motion.div
@@ -780,31 +801,46 @@ _Enviado desde kaori-store.vercel.app_`;
         {/* FOOTER FIJO MEJORADO */}
         <div className="bg-white/95 backdrop-blur-xl border-t border-orange-100 px-6 py-6 z-[80] flex gap-3 shadow-[0_-20px_40px_rgba(249,115,22,0.1)] rounded-t-[3.5rem] absolute bottom-0 left-0 right-0">
           <button
+            type="button"
+            // ─── BLOQUEO TOTAL ───
+            disabled={Number(producto.stock) <= 0}
             onClick={() => {
-              // 1. Rescatamos la cantidad que el usuario eligió en el modal
-              // Se envía como 'cantidadSeleccionada' para que el motor del carrito lo procese
+              if (Number(producto.stock) <= 0) return;
               onAgregar({ ...producto, cantidadSeleccionada: cantidad });
-
-              // 2. Activamos la animación de éxito (Check verde)
               setAgregado(true);
-
-              // 3. Volvemos al estado normal después de 2 segundos
               setTimeout(() => setAgregado(false), 2000);
             }}
-            className={`relative w-18 h-18 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-lg active:scale-95 border-2 ${
-              agregado
-                ? "bg-emerald-500 border-emerald-400 shadow-emerald-200"
-                : "bg-white border-orange-50 shadow-orange-100 hover:border-orange-200"
+            // Mantenemos w-18 fijo para que NO crezca
+            className={`relative w-18 h-18 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-lg border-2 ${
+              Number(producto.stock) <= 0
+                ? "bg-gray-50 border-gray-100 cursor-not-allowed opacity-60" // Estilo Apagado
+                : agregado
+                  ? "bg-emerald-500 border-emerald-400 shadow-emerald-200"
+                  : "bg-white border-orange-50 shadow-orange-100 hover:border-orange-200"
             }`}
           >
             <AnimatePresence mode="wait">
-              {agregado ? (
+              {Number(producto.stock) <= 0 ? (
+                // ─── ÍCONO DE "NO DISPONIBLE" (Mantiene el tamaño) ───
+                <motion.div
+                  key="no-stock"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex flex-col items-center justify-center gap-0.5"
+                >
+                  <span className="text-red-500 text-xl font-black leading-none">
+                    ✕
+                  </span>
+                  <span className="text-[7px] font-[1000] text-gray-400 uppercase leading-none">
+                    Agotado
+                  </span>
+                </motion.div>
+              ) : agregado ? (
                 <motion.div
                   key="success"
                   initial={{ scale: 0, rotate: -45 }}
                   animate={{ scale: 1, rotate: 0 }}
                   exit={{ scale: 0 }}
-                  className="flex flex-col items-center"
                 >
                   <svg
                     className="w-8 h-8 text-white"
@@ -832,13 +868,11 @@ _Enviado desde kaori-store.vercel.app_`;
                     className="w-8 h-8 opacity-70 grayscale-[0.2]"
                     alt="Cart"
                   />
-                  {/* El toque Kaori: puntito naranja que indica acción */}
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#F97316] rounded-full border-2 border-white animate-pulse"></span>
                 </motion.div>
               )}
             </AnimatePresence>
           </button>
-
           <button
             // ─── BLOQUEO FÍSICO ───
             // Se bloquea si el stock es 0 o menor
