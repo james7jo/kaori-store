@@ -3,19 +3,35 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 // ⭐ Rating - AHORA EN NARANJA
-function StarRating({ score }: { score: number }) {
+function StarRating({ stock }: { stock: number }) {
+  // LÓGICA DE KAORI STORE:
+  // 1. Calculamos ventas (Stock Inicial 20 - Stock Actual)
+  const ventas = 20 - stock;
+
+  // 2. Calculamos estrellas (1 por cada 5 ventas)
+  const estrellasCalculadas = Math.floor(ventas / 5);
+
+  // 3. El score final (Mínimo 1 para que no sea triste, Máximo 5)
+  const scoreFinal = Math.min(Math.max(estrellasCalculadas, 1), 5);
+
   return (
-    <div className="flex gap-[2px]">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span
-          key={i}
-          className={`text-[10px] ${
-            i <= score ? "text-[#F97316]" : "text-gray-300"
-          }`}
-        >
-          ★
-        </span>
-      ))}
+    <div className="flex flex-col gap-1">
+      <div className="flex gap-[2px]">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <span
+            key={i}
+            className={`text-[10px] ${
+              i <= scoreFinal ? "text-[#F97316]" : "text-gray-300"
+            }`}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+      {/* Opcional: un mini texto que diga los vendidos para que el cliente entienda */}
+      <p className="text-[8px] font-black text-gray-400 italic uppercase">
+        {ventas > 0 ? `${ventas} vendidos` : "Nuevo"}
+      </p>
     </div>
   );
 }
@@ -190,7 +206,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
         {/* RATING + DATOS */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 bg-gray-50 px-2 py-[2px] rounded-md border border-gray-100">
-            <StarRating score={rating} />
+            <StarRating stock={rating} />
             <span className="text-[10px] text-gray-500 font-bold">
               {rating}.0
             </span>
