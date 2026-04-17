@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 // Aquí está el cambio: subimos un nivel para entrar a components
-import AdminDashboard from "../components/AdminDashboard"; 
+import AdminDashboard from "../components/AdminDashboard";
+export const dynamic = "force-dynamic";
 
 export default function AdminPage() {
   const [pass, setPass] = useState("");
@@ -19,11 +20,13 @@ export default function AdminPage() {
   if (!autorizado) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-white text-center">
-        <h1 className="text-5xl font-black italic tracking-tighter mb-10">KAORI ADMIN</h1>
+        <h1 className="text-5xl font-black italic tracking-tighter mb-10">
+          KAORI ADMIN
+        </h1>
         <form onSubmit={checkPass} className="w-full max-w-xs space-y-4">
-          <input 
-            type="password" 
-            placeholder="Contraseña" 
+          <input
+            type="password"
+            placeholder="Contraseña"
             className="w-full p-5 rounded-3xl bg-white/10 border border-white/10 outline-none text-center text-xl"
             value={pass}
             onChange={(e) => setPass(e.target.value)}
