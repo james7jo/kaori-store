@@ -8,6 +8,7 @@ interface CarritoItem {
   precio: number;
   imagen: string;
   cantidad: number;
+  stock?: number;
 }
 
 interface Props {
@@ -55,10 +56,16 @@ export default function VistaCarrito({
     setCarrito(
       carrito.map((item) => {
         if (item.id === id) {
-          const nuevaCantidad = Math.max(
-            1,
-            (Number(item.cantidad) || 1) + delta,
-          );
+          const stockDisponible = Number(item.stock) || 0;
+          const cantidadActual = Number(item.cantidad) || 1;
+
+          // Si intenta subir (+) pero ya llegó al límite de stock
+          if (delta > 0 && cantidadActual >= stockDisponible) {
+            alert("¡Límite de stock alcanzado!");
+            return item;
+          }
+
+          const nuevaCantidad = Math.max(1, cantidadActual + delta);
           return { ...item, cantidad: nuevaCantidad };
         }
         return item;
@@ -71,6 +78,16 @@ export default function VistaCarrito({
   };
 
   const finalizarPedidoCompleto = () => {
+    const productosAgotados = carrito.filter(
+      (item) => (Number(item.stock) || 0) <= 0,
+    );
+
+    if (productosAgotados.length > 0) {
+      alert(
+        `⚠️ ¡Atención! Los siguientes productos se agotaron:\n${productosAgotados.map((p) => p.nombre).join(", ")}\n\nPor favor, elíminarlos del carrito para continuar.`,
+      );
+      return; // Detenemos todo, no se abre WhatsApp
+    }
     // 1. Armamos la lista de productos con formato limpio
     const listaProductos = carrito
       .map(
@@ -169,6 +186,7 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
             </div>
 
             {/* ─── LISTA DE PRODUCTOS ─── */}
+            {/* ─── LISTA DE PRODUCTOS ─── */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 bg-gray-50/50 no-scrollbar">
               {carrito.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full space-y-6">
@@ -182,71 +200,96 @@ _Por favor, confirmar la recepción del pedido para coordinar la entrega._`;
                   </p>
                 </div>
               ) : (
-                carrito.map((item, index) => (
-                  <motion.div
-                    layout
-                    key={`item-${item.id || "sin-id"}-${index}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white p-5 rounded-[2.5rem] shadow-[0_10px_30px_rgba(249,115,22,0.05)] border border-orange-100/50 flex gap-5 group relative"
-                  >
-                    {/* Imagen con contenedor limpio */}
-                    <div className="w-24 h-24 bg-[#FFF8F1] rounded-[2rem] flex-shrink-0 p-2 flex items-center justify-center">
-                      <img
-                        src={item.imagen}
-                        className="w-full h-full object-contain mix-blend-multiply"
-                        alt={item.nombre}
-                      />
-                    </div>
+                carrito.map((item, index) => {
+                  const estaAgotado = Number(item.stock) <= 0;
 
-                    <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
-                      <div>
-                        <p className="text-[11px] font-[1000] text-gray-400 uppercase tracking-tighter truncate leading-none mb-1">
-                          {item.nombre}
-                        </p>
-                        <p className="text-2xl font-[1000] text-[#1F2937] italic leading-none tracking-tighter">
-                          BOB {Number(item.precio) * Number(item.cantidad)}
-                        </p>
+                  return (
+                    <motion.div
+                      layout
+                      key={`item-${item.id || "sin-id"}-${index}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-5 rounded-[2.5rem] shadow-[0_10px_30px_rgba(249,115,22,0.05)] border flex gap-5 group relative transition-all ${
+                        estaAgotado
+                          ? "bg-gray-100 border-gray-200"
+                          : "bg-white border-orange-100/50"
+                      }`}
+                    >
+                      {/* Imagen con contenedor limpio */}
+                      <div className="w-24 h-24 bg-[#FFF8F1] rounded-[2rem] flex-shrink-0 p-2 flex items-center justify-center relative overflow-hidden">
+                        <img
+                          src={item.imagen}
+                          className={`w-full h-full object-contain mix-blend-multiply ${estaAgotado ? "grayscale opacity-50" : ""}`}
+                          alt={item.nombre}
+                        />
+                        {estaAgotado && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <span className="text-[10px] font-black text-white uppercase tracking-tighter">
+                              Sin Stock
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex justify-between items-center mt-3">
-                        {/* Control de Cantidad Estilo Apple */}
-                        <div className="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
-                          <button
-                            onClick={() => actualizarCantidad(item.id, -1)}
-                            className="w-8 h-8 font-black text-[#1F2937] active:scale-75 transition-transform"
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center text-xs font-black text-[#F97316] italic">
-                            {item.cantidad}
-                          </span>
-                          <button
-                            onClick={() => actualizarCantidad(item.id, 1)}
-                            className="w-8 h-8 font-black text-[#1F2937] active:scale-75 transition-transform"
-                          >
-                            +
-                          </button>
+                      <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+                        <div>
+                          <p className="text-[11px] font-[1000] text-gray-400 uppercase tracking-tighter truncate leading-none mb-1">
+                            {item.nombre}
+                          </p>
+                          {estaAgotado ? (
+                            <p className="text-[13px] font-black text-red-500 uppercase italic leading-none">
+                              ⚠️ Agotado
+                            </p>
+                          ) : (
+                            <p className="text-2xl font-[1000] text-[#1F2937] italic leading-none tracking-tighter">
+                              BOB {Number(item.precio) * Number(item.cantidad)}
+                            </p>
+                          )}
                         </div>
 
-                        <button
-                          onClick={() => eliminarItem(item.id)}
-                          className="w-9 h-9 flex items-center justify-center bg-red-50 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            viewBox="0 0 24 24"
+                        <div className="flex justify-between items-center mt-3">
+                          {/* Control de Cantidad Estilo Apple */}
+                          <div
+                            className={`flex items-center rounded-xl p-1 border ${estaAgotado ? "bg-gray-200 border-gray-300" : "bg-gray-100 border-gray-200"}`}
                           >
-                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                            <button
+                              onClick={() => actualizarCantidad(item.id, -1)}
+                              disabled={estaAgotado}
+                              className="w-8 h-8 font-black text-[#1F2937] active:scale-75 transition-transform disabled:opacity-20"
+                            >
+                              -
+                            </button>
+                            <span className="w-8 text-center text-xs font-black text-[#F97316] italic">
+                              {item.cantidad}
+                            </span>
+                            <button
+                              onClick={() => actualizarCantidad(item.id, 1)}
+                              disabled={estaAgotado}
+                              className="w-8 h-8 font-black text-[#1F2937] active:scale-75 transition-transform disabled:opacity-20"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() => eliminarItem(item.id)}
+                            className="w-9 h-9 flex items-center justify-center bg-red-50 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                    </motion.div>
+                  );
+                })
               )}
             </div>
 

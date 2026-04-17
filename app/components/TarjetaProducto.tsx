@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
 // ⭐ Rating - AHORA EN NARANJA
@@ -38,6 +38,29 @@ function StarRating({ stock }: { stock: number }) {
 
 export default function TarjetaProducto({ producto, onClick }: any) {
   const [loaded, setLoaded] = useState(false);
+  const [indexImagen, setIndexImagen] = useState(0); // Para controlar qué foto se ve
+
+  // 1. Creamos el array de todas las fotos disponibles
+  const todasLasFotos = [
+    producto.imagen,
+    ...(producto.galeria
+      ? producto.galeria.split(",").filter((img: string) => img !== "")
+      : []),
+  ];
+
+  // 2. Efecto para rotar las imágenes automáticamente cada 3 segundos
+  useEffect(() => {
+    // Solo rotamos si hay más de una foto y el producto NO está agotado
+    if (todasLasFotos.length <= 1 || Number(producto.stock) <= 0) return;
+
+    const intervalo = setInterval(() => {
+      setIndexImagen((prev) => (prev + 1) % todasLasFotos.length);
+    }, 3000); // 3 segundos por foto
+
+    return () => clearInterval(intervalo);
+  }, [todasLasFotos.length, producto.stock]);
+
+  // ... resto de tus constantes (consultas, vendidos, etc)
   const [consultas, setConsultas] = useState(producto.consultas || 0);
 
   const vendidosCalculados = Math.max(
@@ -116,24 +139,42 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#F97316]/5 via-transparent to-transparent pointer-events-none" />
 
       {/* IMAGEN - FONDO CREMA SUAVE */}
+      {/* IMAGEN - CARRUSEL AUTOMÁTICO */}
       <div className="aspect-square relative bg-[#FFF8F1]/30 overflow-hidden">
-        {!loaded && (
-          <div className="absolute inset-0 animate-pulse bg-gray-100" />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={todasLasFotos[indexImagen]}
+            src={todasLasFotos[indexImagen]}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className={`w-full h-full object-contain p-3 transition-all ${
+              Number(producto.stock) <= 0
+                ? "grayscale opacity-25 brightness-90"
+                : "group-hover:scale-110 duration-700"
+            }`}
+            alt={producto.nombre}
+          />
+        </AnimatePresence>
+
+        {/* PUNTITOS INDICADORES */}
+        {todasLasFotos.length > 1 && Number(producto.stock) > 0 && (
+          <div className="absolute bottom-2 right-2 flex gap-1 z-20">
+            {todasLasFotos.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-500 ${
+                  i === indexImagen ? "bg-[#F97316] w-3" : "bg-gray-400/30 w-1"
+                }`}
+              />
+            ))}
+          </div>
         )}
 
-        <img
-          src={producto.imagen}
-          loading="lazy"
-          onLoad={() => setLoaded(true)}
-          className={`w-full h-full object-contain p-3 transition duration-700 ${
-            loaded ? "opacity-100 scale-100" : "opacity-0 scale-110 blur-sm"
-          } group-hover:scale-110`}
-          alt={producto.nombre}
-        />
-
-        {/* 🔻 DESCUENTO NARANJA INTENSO */}
+        {/* 🔻 DESCUENTO */}
         {tieneDescuento && (
-          <div className="absolute top-2 left-2 bg-[#EA580C] px-2 py-1 rounded-md shadow-md">
+          <div className="absolute top-2 left-2 bg-[#EA580C] px-2 py-1 rounded-md shadow-md z-10">
             <span className="text-[10px] font-bold text-white">
               -{producto.descuento}
             </span>
@@ -141,22 +182,24 @@ export default function TarjetaProducto({ producto, onClick }: any) {
         )}
 
         {/* ⚠️ POCAS UNIDADES */}
-        {producto.stock > 0 && producto.stock <= 5 && (
-          <div className="absolute bottom-2 left-2 bg-amber-500 px-2 py-1 rounded-md shadow-md animate-pulse">
+        {Number(producto.stock) > 0 && Number(producto.stock) <= 5 && (
+          <div className="absolute bottom-2 left-2 bg-amber-500 px-2 py-1 rounded-md shadow-md animate-pulse z-10">
             <span className="text-[10px] font-black text-white uppercase">
-              {producto.stock === 1
+              {Number(producto.stock) === 1
                 ? "Última unidad"
                 : `Quedan ${producto.stock}`}
             </span>
           </div>
         )}
 
-        {/* 🚫 AGOTADO */}
-        {producto.stock === 0 && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="text-xs font-black text-white bg-gray-400 px-3 py-1 rounded-md uppercase">
-              Agotado
-            </span>
+        {/* 🚫 CARTEL DE AGOTADO */}
+        {Number(producto.stock) <= 0 && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+            <div className="bg-[#1F2937]/90 px-3 py-1.5 rounded-xl shadow-2xl border border-white/10 -rotate-12 backdrop-blur-sm">
+              <span className="text-[9px] font-black text-white uppercase italic tracking-widest">
+                Agotado
+              </span>
+            </div>
           </div>
         )}
       </div>

@@ -161,7 +161,7 @@ export default function CatalogoKaori() {
     { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
     { id: "PDF", icon: "📑", label: "Libros y PDFs" },
     { id: "Digital", icon: "🎮", label: "Juegos y Licencias" },
-    { id: "Outlet", icon: "💎", label: "Ofertas Outlet" },
+    { id: "Outlet", icon: "💎", label: "Ofertas Medio Uso" },
   ];
 
   // ─── CARGA DE PRODUCTOS DESDE SUPABASE ─── // NO QUITAR

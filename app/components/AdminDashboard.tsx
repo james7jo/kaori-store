@@ -48,17 +48,17 @@ const FORM_VACIO: FormState = {
 
 const OPCIONES_CATEGORIA = [
   { id: "Todo", label: "General / Novedades" },
-  { id: "Tecno", label: "Celulares y Audífonos" },
+  { id: "Tecno", label: "Tecnologia y Audífonos" },
   { id: "Electro", label: "Electrodomésticos" },
   { id: "Insumos", label: "Insumos Médicos" },
   { id: "PDF", label: "Libros y PDFs" },
   { id: "Digital", label: "Juegos y Licencias" },
-  { id: "Outlet", label: "Ofertas Outlet" },
+  { id: "Outlet", label: "Ofertas Medio Uso" },
   { id: "PetShop", label: "Pet Shop / Mascotas" },
 ];
 const OPCIONES_ESTADO = [
-  { id: "nuevo", label: "✨ Nuevo / Sellado" },
-  { id: "usado", label: "♻️ Usado / Outlet" },
+  { id: "nuevo", label: "✨ Nuevo " },
+  { id: "usado", label: "♻️ Usado " },
 ];
 
 const ITEMS_POR_PAGINA = 10;
@@ -266,6 +266,11 @@ export default function AdminDashboardKaori() {
     } finally {
       setSubiendoGaleria(false);
     }
+  };
+  const eliminarDeGaleria = (urlAEliminar: string) => {
+    const fotosActuales = form.galeria ? form.galeria.split(",") : [];
+    const nuevaGaleria = fotosActuales.filter((url) => url !== urlAEliminar);
+    setForm({ ...form, galeria: nuevaGaleria.join(",") });
   };
   const [productos, setProductos] = useState<Producto[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -475,16 +480,23 @@ export default function AdminDashboardKaori() {
             </button>
             <button
               onClick={() => setSeccion("agregar")}
-              className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${seccion === "agregar" ? "bg-white/10 text-white" : "text-gray-600"}`}
+              className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all duration-300 flex items-center gap-1.5 shadow-md ${
+                seccion === "agregar"
+                  ? "bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white shadow-[0_0_15px_rgba(249,115,22,0.4)] scale-105"
+                  : "bg-[#1A1A1A] text-[#F97316] border border-[#F97316]/30 hover:bg-[#F97316]/10"
+              }`}
             >
-              {idEditando ? "✏️ Editando" : "+ Agregar"}
+              <span className="text-xs">{idEditando ? "✏️" : "✨"}</span>
+              <span className="whitespace-nowrap">
+                {idEditando ? "Editar" : "Agregar"}
+              </span>
             </button>
           </nav>
           <Link
             href="/"
             className="px-4 py-2 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
           >
-            Vista Live
+            Ir a la pagina
           </Link>
         </div>
       </header>
@@ -736,6 +748,39 @@ export default function AdminDashboardKaori() {
                           className="w-full text-xs text-gray-500 file:bg-orange-600 file:border-none file:px-4 file:py-2 file:rounded-xl file:text-white"
                         />
                       </Campo>
+                      {(form.imagen || idEditando) && (
+                        <div className="p-4 bg-white/5 rounded-2xl border border-white/5 relative group w-fit">
+                          <p className="text-[9px] font-black uppercase text-gray-600 mb-2">
+                            Imagen Principal
+                          </p>
+
+                          <div className="relative w-20 h-20">
+                            <img
+                              src={form.imagen}
+                              className="w-full h-full object-cover rounded-lg border border-white/10 shadow-md"
+                              alt="Preview principal"
+                            />
+
+                            {/* BOTÓN X PARA LIMPIAR LA IMAGEN PRINCIPAL */}
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, imagen: "" })}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl border-2 border-[#111] hover:scale-110 active:scale-90 transition-all z-10"
+                              title="Quitar imagen principal"
+                            >
+                              <span className="text-[10px] font-bold">✕</span>
+                            </button>
+                          </div>
+
+                          {/* Mensaje de ayuda sutil */}
+                          <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 hidden group-hover:block whitespace-nowrap">
+                            <p className="text-[10px] text-red-500 font-bold italic">
+                              ← Quitar foto
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
                       <Campo label="Galería adicional">
                         <div className="space-y-2">
                           <input
@@ -759,17 +804,44 @@ export default function AdminDashboardKaori() {
                           )}
                         </div>
                       </Campo>
-                      {(form.imagen || idEditando) && (
-                        <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                          <p className="text-[9px] font-black uppercase text-gray-600 mb-2">
-                            Imagen Actual
+                      {/* VISUALIZADOR DE GALERÍA CON BOTÓN ELIMINAR */}
+                      {form.galeria && (
+                        <Campo label="Fotos actuales en galería">
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            {form.galeria
+                              .split(",")
+                              .filter((url) => url !== "")
+                              .map((url, index) => (
+                                <div
+                                  key={index}
+                                  className="relative group aspect-square"
+                                >
+                                  <img
+                                    src={url}
+                                    className="w-full h-full object-cover rounded-xl border border-white/10 shadow-lg"
+                                    alt="Miniatura galería"
+                                  />
+                                  {/* BOTÓN PARA ELIMINAR CADA FOTO */}
+                                  <button
+                                    type="button"
+                                    onClick={() => eliminarDeGaleria(url)}
+                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl border-2 border-[#111] hover:scale-110 active:scale-90 transition-all z-10"
+                                  >
+                                    <span className="text-[10px] font-bold">
+                                      ✕
+                                    </span>
+                                  </button>
+
+                                  {/* EFECTO VISUAL AL PASAR EL MOUSE */}
+                                  <div className="absolute inset-0 bg-red-600/10 opacity-0 group-hover:opacity-100 rounded-xl pointer-events-none transition-opacity" />
+                                </div>
+                              ))}
+                          </div>
+                          <p className="text-[9px] text-gray-600 italic mt-2">
+                            * Toca la "✕" roja para quitar una imagen de la
+                            galería. No olvides "Guardar Cambios" al finalizar.
                           </p>
-                          <img
-                            src={form.imagen}
-                            className="h-20 w-20 object-cover rounded-lg border border-white/10"
-                            alt="Preview"
-                          />
-                        </div>
+                        </Campo>
                       )}
                     </div>
                   </div>
@@ -777,18 +849,33 @@ export default function AdminDashboardKaori() {
                     <button
                       type="submit"
                       disabled={subiendo}
-                      className="flex-1 py-4 bg-gradient-to-r from-orange-600 to-red-700 rounded-2xl font-black italic text-lg uppercase shadow-xl active:scale-95 transition-all"
+                      className={`flex-1 py-4 rounded-2xl font-black italic text-lg uppercase shadow-xl transition-all duration-300 flex items-center justify-center gap-3 ${
+                        subiendo
+                          ? "bg-gray-800 text-gray-500 cursor-not-allowed opacity-70 animate-pulse" // ESTADO BLOQUEADO
+                          : "bg-gradient-to-r from-orange-600 to-red-700 text-white active:scale-95 shadow-orange-900/20" // ESTADO ACTIVO
+                      }`}
                     >
-                      {subiendo
-                        ? "Procesando..."
-                        : idEditando
-                          ? "Guardar Cambios"
-                          : "Publicar Ahora"}
+                      {subiendo ? (
+                        <>
+                          <span className="w-5 h-5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></span>
+                          Procesando...
+                        </>
+                      ) : idEditando ? (
+                        "Guardar Cambios"
+                      ) : (
+                        "Publicar Ahora"
+                      )}
                     </button>
+
                     <button
                       type="button"
+                      disabled={subiendo} // También bloqueamos el cancelar para que no interrumpa la subida
                       onClick={cancelarEdicion}
-                      className="px-8 py-4 bg-white/5 border border-white/8 rounded-2xl font-black text-gray-500 uppercase text-sm"
+                      className={`px-8 py-4 rounded-2xl font-black uppercase text-sm transition-all ${
+                        subiendo
+                          ? "bg-white/5 text-gray-700 cursor-not-allowed"
+                          : "bg-white/5 border border-white/8 text-gray-500 hover:bg-white/10 hover:text-white"
+                      }`}
                     >
                       Cancelar
                     </button>

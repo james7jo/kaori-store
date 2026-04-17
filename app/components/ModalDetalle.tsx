@@ -36,6 +36,17 @@ export default function ModalDetalle({
   const fotos = producto.galeria
     ? [producto.imagen, ...producto.galeria.split(",").filter(Boolean)]
     : [producto.imagen];
+  // --- 1. LÓGICA DE CARRUSEL AUTOMÁTICO ---
+  useEffect(() => {
+    // Si solo hay una foto o el usuario está viendo el Zoom, no rotamos
+    if (fotos.length <= 1 || showImageModal) return;
+
+    const intervalo = setInterval(() => {
+      setIndexFoto((prev) => (prev + 1) % fotos.length);
+    }, 3500); // Cambia cada 3.5 segundos
+
+    return () => clearInterval(intervalo);
+  }, [fotos.length, showImageModal]);
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const dragX = useMotionValue(0);
@@ -116,6 +127,7 @@ _Enviado desde kaori-store.vercel.app_`;
           style={{ paddingBottom: "160px" }}
         >
           {/* GALERÍA */}
+          {/* GALERÍA - CON ROTACIÓN AUTOMÁTICA */}
           <div
             className="relative w-full bg-white rounded-[3rem] overflow-hidden shadow-sm border border-orange-50"
             style={{ height: "40vh" }}
@@ -146,17 +158,24 @@ _Enviado desde kaori-store.vercel.app_`;
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.1 }}
-                  className="w-full h-full object-contain pointer-events-none"
+                  transition={{ duration: 0.5 }}
+                  className={`w-full h-full object-contain pointer-events-none ${
+                    producto.stock <= 0 ? "grayscale opacity-40" : ""
+                  }`}
                   alt="Kaori Store"
                 />
               </AnimatePresence>
             </motion.div>
+
+            {/* PUNTOS INDICADORES DINÁMICOS */}
             {fotos.length > 1 && (
-              <div className="absolute bottom-6 flex gap-2 left-1/2 -translate-x-1/2 bg-white/90 px-4 py-2.5 rounded-full shadow-lg backdrop-blur-md">
+              <div className="absolute bottom-6 flex gap-2 left-1/2 -translate-x-1/2 bg-white/60 px-4 py-2.5 rounded-full shadow-sm backdrop-blur-md border border-white/20">
                 {fotos.map((_, i) => (
                   <div
                     key={i}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${i === indexFoto ? "w-8 bg-[#F97316]" : "w-2 bg-orange-200"}`}
+                    className={`h-1.5 rounded-full transition-all duration-700 ${
+                      i === indexFoto ? "w-8 bg-[#F97316]" : "w-2 bg-orange-200"
+                    }`}
                   />
                 ))}
               </div>
@@ -245,10 +264,14 @@ _Enviado desde kaori-store.vercel.app_`;
                           <span className="text-4xl text-orange-100 absolute -top-4 -left-2 font-serif select-none">
                             “
                           </span>
-                          <p className="text-[14px] text-gray-600 font-medium leading-relaxed italic px-6 relative z-10">
-                            {producto.descripcion ||
-                              "Especificaciones de alta gama seleccionadas para el mercado boliviano. Calidad garantizada por Kaori Store."}
-                          </p>
+                          <div className="bg-orange-50/50 rounded-3xl p-6 border border-orange-100/50">
+                            <p className="text-[10px] font-black uppercase text-orange-400 tracking-[0.2em] mb-4">
+                              Descripción del Producto
+                            </p>
+                            <div className="text-gray-700 text-sm leading-loose whitespace-pre-line italic font-medium">
+                              {producto.descripcion}
+                            </div>
+                          </div>
                           {/* Comilla de Cierre - Corregida a la derecha y abajo */}
                           <span className="text-4xl text-orange-100 absolute -bottom-6 -right-2 font-serif select-none">
                             ”
