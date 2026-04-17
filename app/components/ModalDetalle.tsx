@@ -351,8 +351,8 @@ _Fecha: ${fecha}_`;
                             }`}
                           >
                             {producto.estado === "usado"
-                              ? "Usado / Outlet"
-                              : "Nuevo / Sellado"}
+                              ? "Usado"
+                              : "Nuevo"}
                           </span>
                         </div>
                       </div>
