@@ -141,36 +141,19 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       {/* IMAGEN - FONDO CREMA SUAVE */}
       {/* IMAGEN - CARRUSEL AUTOMÁTICO */}
       <div className="aspect-square relative bg-[#FFF8F1]/30 overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={todasLasFotos[indexImagen]}
-            src={todasLasFotos[indexImagen]}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className={`w-full h-full object-contain p-3 transition-all ${
-              Number(producto.stock) <= 0
-                ? "grayscale opacity-25 brightness-90"
-                : "group-hover:scale-110 duration-700"
-            }`}
-            alt={producto.nombre}
-          />
-        </AnimatePresence>
-
-        {/* PUNTITOS INDICADORES */}
-        {todasLasFotos.length > 1 && Number(producto.stock) > 0 && (
-          <div className="absolute bottom-2 right-2 flex gap-1 z-20">
-            {todasLasFotos.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 rounded-full transition-all duration-500 ${
-                  i === indexImagen ? "bg-[#F97316] w-3" : "bg-gray-400/30 w-1"
-                }`}
-              />
-            ))}
-          </div>
-        )}
+        <img
+          src={producto.imagen}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          className={`w-full h-full object-contain p-3 transition-all duration-700 ${
+            loaded ? "opacity-100 scale-100" : "opacity-0"
+          } ${
+            Number(producto.stock) <= 0
+              ? "grayscale opacity-30 brightness-90"
+              : "group-hover:scale-110"
+          }`}
+          alt={producto.nombre}
+        />
 
         {/* 🔻 DESCUENTO */}
         {tieneDescuento && (
