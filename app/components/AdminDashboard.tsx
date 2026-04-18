@@ -49,7 +49,7 @@ const FORM_VACIO: FormState = {
 const OPCIONES_CATEGORIA = [
   { id: "Todo", label: "General / Novedades" },
   { id: "Tecno", label: "Tecnologia y Audífonos" },
-  { id: "Electro", label: "Electrodomésticos" },
+  { id: "Electro", label: "Electro & hogar" },
   { id: "Insumos", label: "Insumos Médicos" },
   { id: "PDF", label: "Libros y PDFs" },
   { id: "Digital", label: "Juegos y Licencias" },

@@ -156,7 +156,7 @@ export default function CatalogoKaori() {
   const categoriasConfig = [
     { id: "Todo", icon: "✨", label: "Novedades" },
     { id: "Tecno", icon: "🎧", label: "Tecnología y Accesorios" },
-    { id: "Electro", icon: "🏠", label: "Electrodomésticos" },
+    { id: "Electro", icon: "🏠", label: "Electrodomésticos y Hogar" },
     { id: "PetShop", icon: "🐶", label: "Pet Shop / Mascotas" },
     { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
     { id: "PDF", icon: "📑", label: "Libros y PDFs" },
