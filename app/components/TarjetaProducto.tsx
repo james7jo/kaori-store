@@ -3,16 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
 // ⭐ Rating - AHORA EN NARANJA
-function StarRating({ stock }: { stock: number }) {
-  // LÓGICA DE KAORI STORE:
-  // 1. Calculamos ventas (Stock Inicial 20 - Stock Actual)
-  const ventas = 20 - stock;
+// ⭐ Rating - AHORA INDEPENDIENTE POR PRODUCTO
+function StarRating({ producto }: { producto: any }) {
+  // 1. Usamos los valores reales que vienen de Supabase/Base de datos para ESTE producto
+  // Si no existen, usamos 0 para no romper el código
+  const stockActual = Number(producto.stock) || 0;
+  const vendidosReal = Number(producto.vendidos) || 0;
 
-  // 2. Calculamos estrellas (1 por cada 5 ventas)
-  const estrellasCalculadas = Math.floor(ventas / 5);
+  // 2. Calculamos las estrellas (1 por cada 5 ventas del producto específico)
+  // Sumamos 1 de base para que no se vea vacío
+  const estrellasCalculadas = Math.floor(vendidosReal / 5) + 1;
 
-  // 3. El score final (Mínimo 1 para que no sea triste, Máximo 5)
-  const scoreFinal = Math.min(Math.max(estrellasCalculadas, 1), 5);
+  // 3. El score final (Máximo 5)
+  const scoreFinal = Math.min(estrellasCalculadas, 5);
 
   return (
     <div className="flex flex-col gap-1">
@@ -28,9 +31,10 @@ function StarRating({ stock }: { stock: number }) {
           </span>
         ))}
       </div>
-      {/* Opcional: un mini texto que diga los vendidos para que el cliente entienda */}
+
+      {/* Muestra los vendidos reales de este producto específico */}
       <p className="text-[8px] font-black text-gray-400 italic uppercase">
-        {ventas > 0 ? `${ventas} vendidos` : "Nuevo"}
+        {vendidosReal > 0 ? `${vendidosReal} vendidos` : "Nuevo"}
       </p>
     </div>
   );
@@ -232,7 +236,7 @@ export default function TarjetaProducto({ producto, onClick }: any) {
         {/* RATING + DATOS */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 bg-gray-50 px-2 py-[2px] rounded-md border border-gray-100">
-            <StarRating stock={rating} />
+            <StarRating producto={producto} />
             <span className="text-[10px] text-gray-500 font-bold">
               {rating}.0
             </span>
