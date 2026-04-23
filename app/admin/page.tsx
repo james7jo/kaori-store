@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 const AdminDashboard = dynamic(() => import("../components/AdminDashboard"), {
   ssr: false,
@@ -55,10 +56,22 @@ export default function AdminPage() {
     setIsMounted(true);
   }, []);
 
-  const checkPass = (e: React.FormEvent) => {
+  const checkPass = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (pass.toLowerCase().trim() === "james") {
-      setAutorizado(true);
+      // 2. HACEMOS EL LOGIN REAL EN SUPABASE
+      // Usa el correo y la contraseña que creaste en el paso 1
+      const { error } = await supabase.auth.signInWithPassword({
+        email: "sarabiabrayam72@gmail.com",
+        password: "JOSEmetal123",
+      });
+
+      if (error) {
+        alert("Error de conexión con el reino: " + error.message);
+      } else {
+        setAutorizado(true);
+      }
     } else {
       alert("Ese no es el nombre... concéntrate, amor 💀");
     }
