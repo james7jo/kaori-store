@@ -2,6 +2,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
+// Función para saber si un producto se subió hace menos de 24 horas
+const esProductoNuevo = (fechaIso: string) => {
+  if (!fechaIso) return false;
+  const fechaCreacion = new Date(fechaIso).getTime();
+  const ahora = new Date().getTime();
+  const unDiaEnMilisegundos = 24 * 60 * 60 * 1000; // 24 horas
+  return ahora - fechaCreacion < unDiaEnMilisegundos;
+};
+
 // ⭐ Rating - AHORA EN NARANJA
 // ⭐ Rating - AHORA INDEPENDIENTE POR PRODUCTO
 function StarRating({ producto }: { producto: any }) {
@@ -35,6 +44,13 @@ function StarRating({ producto }: { producto: any }) {
       {/* Muestra los vendidos reales de este producto específico */}
       <p className="text-[8px] font-black text-gray-400 italic uppercase">
         {vendidosReal > 0 ? `${vendidosReal} vendidos` : "Nuevo"}
+      </p>
+      <p className="text-[8px] font-black text-gray-400 italic uppercase">
+        {vendidosReal > 0
+          ? `${vendidosReal} vendidos`
+          : esProductoNuevo(producto.created_at)
+            ? "Nuevo"
+            : ""}
       </p>
     </div>
   );
@@ -102,17 +118,17 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       };
     }
 
-    if (vendidosCalculados > 20) {
+    if (vendidosCalculados < 3 && esProductoNuevo(producto.created_at)) {
       return {
-        text: "🔥 Top ventas",
-        style: "bg-[#F97316]/10 border-[#F97316]/20 text-[#F97316]",
+        text: "Recién añadido",
+        style: "bg-orange-400/10 border-orange-400/20 text-orange-600",
       };
     }
 
     if (vendidosCalculados < 3) {
       return {
-        text: "Recien añadido",
-        style: "bg-orange-400/10 border-orange-400/20 text-orange-500",
+        text: "Recién añadido",
+        style: "bg-orange-400/10 border-orange-400/20 text-orange-600",
       };
     }
 
@@ -142,7 +158,6 @@ export default function TarjetaProducto({ producto, onClick }: any) {
       {/* Glow Naranja al pasar el mouse */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#F97316]/5 via-transparent to-transparent pointer-events-none" />
 
-      {/* IMAGEN - FONDO CREMA SUAVE */}
       {/* IMAGEN - CARRUSEL AUTOMÁTICO */}
       <div className="aspect-square relative bg-[#FFF8F1]/30 overflow-hidden">
         <img
@@ -193,48 +208,51 @@ export default function TarjetaProducto({ producto, onClick }: any) {
 
       {/* INFO */}
       <div className="p-3 flex flex-col gap-2">
-        {/* NOMBRE EN GRIS PIZARRA */}
-        <h3 className="text-[13px] text-[#1F2937] font-bold uppercase line-clamp-2 h-[34px] group-hover:text-[#F97316] transition">
+        {/* NOMBRE DEL PRODUCTO - Altura fija para alinear todo */}
+        <h3 className="text-[13px] text-[#1F2937] font-[1000] uppercase line-clamp-2 min-h-[34px] group-hover:text-[#F97316] transition-colors leading-tight">
           {producto.nombre}
         </h3>
 
-        {/* PRECIO + BADGE */}
-        {/* PRECIO + BADGE */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
+        {/* CONTENEDOR PRECIO + BADGE - Alineado al fondo con altura constante */}
+        <div className="flex items-end justify-between min-h-[40px] mt-1">
+          <div className="flex flex-col justify-end">
             {tieneDescuento && (
-              <span className="text-[10px] text-gray-400 line-through">
+              <span className="text-[10px] text-gray-400 line-through leading-none mb-1">
                 Bs{" "}
                 {(() => {
                   const precioActual = Number(producto.precio) || 0;
-                  // Limpiamos el texto del descuento para quedarnos solo con el número
                   const valorPorcentaje = parseFloat(
                     producto.descuento.toString().replace("%", ""),
                   );
-
                   if (isNaN(valorPorcentaje) || valorPorcentaje >= 100)
                     return precioActual;
-
-                  // Matemática inversa: Si el producto vale 75 y tiene 25% de desc,
-                  // el precio original era 100. (75 / 0.75)
                   const factor = (100 - valorPorcentaje) / 100;
                   return (precioActual / factor).toFixed(0);
                 })()}
               </span>
             )}
 
-            <div className="flex items-end gap-1">
+            <div className="flex items-end gap-1 leading-none">
               <span className="text-[#F97316] text-xs font-bold uppercase">
                 Bs
               </span>
-              <span>{Number(producto.precio).toFixed(2)}</span>
+              <span className="text-[17px] font-[1000] text-[#1F2937]">
+                {Number(producto.precio).toFixed(2)}
+              </span>
             </div>
           </div>
 
-          {/* Badge Dinámico */}
-          <div className={`px-2 py-[2px] rounded-md border ${badge.style}`}>
-            <span className="text-[8px] font-bold uppercase">{badge.text}</span>
-          </div>
+          {/* Badge Dinámico en dos pisos (Recién / Añadido) */}
+          {/* Solo mostramos el cuadradito si tiene texto (como el Recién Añadido) */}
+          {badge.text && badge.text !== "🚚 Envío Nacional" && (
+            <div
+              className={`px-2 py-1 rounded-lg border flex items-center justify-center transition-transform group-hover:scale-105 ${badge.style}`}
+            >
+              <span className="text-[8px] font-[1000] uppercase tracking-tighter leading-[1.1] text-center max-w-[45px]">
+                {badge.text}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* RATING + DATOS */}

@@ -15,6 +15,162 @@ import VistaCarrito from "./components/VistaCarrito";
 // Acento Principal: #F97316 (Naranja consolidado, transmite energía y acción)
 // Acento Secundario/Hover: #EA580C (Naranja más oscuro para interacciones)
 export const dynamic = "force-dynamic";
+// ─── COMPONENTE PARA LAS FILAS HORIZONTALES ───
+import { useRef } from "react";
+
+// ─── CARRUSEL INFINITO DE MARCAS ───
+function MarcasAliadas() {
+  const marcas = [
+    "Ugreen",
+    "Redragon",
+    "Oster",
+    "RAF",
+    "Havit",
+    "MSI",
+    "Apple",
+    "Motorola",
+    "Sony",
+    "Windows ",
+    "Logitech",
+    "Xiaomi",
+    "Realme",
+    "T-Dagger",
+    "Office",
+    "PSS",
+    "Google",
+    "Amazon",
+    "Philips",
+    "asus",
+    "zotac",
+    "helios",
+    "antec",
+    "corsair",
+    "ewtto",
+    "gigabyte",
+  ];
+
+  return (
+    <div className="w-full py-10 bg-white overflow-hidden border-y border-orange-50">
+      {/* Contenedor del scroll infinito */}
+      <div className="flex w-[800%] gap-1 animate-scroll-marcas">
+        {/* Renderizamos las marcas dos veces para que el ciclo sea infinito e invisible */}
+        {[...marcas, ...marcas].map((marca, i) => (
+          <div
+            key={i}
+            className="flex-shrink-0 flex items-center justify-center min-w-[100px]"
+          >
+            <span className="text-xl font-[1000] italic uppercase tracking-tighter text-slate-300 hover:text-[#F97316] transition-colors cursor-default">
+              {marca}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <style jsx>{`
+        @keyframes scroll-marcas {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-scroll-marcas {
+          animation: scroll-marcas 30s linear infinite;
+        }
+      `}</style>
+    </div>
+  );
+}
+function CarruselSeccion({
+  titulo,
+  subtitulo,
+  items,
+  abrirProducto,
+  tiempo = 8000,
+}: any) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const intervalo = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          const avance = 240 + Math.floor(Math.random() * 50);
+          scrollRef.current.scrollBy({ left: avance, behavior: "smooth" });
+        }
+      }
+    }, tiempo);
+    return () => clearInterval(intervalo);
+  }, [items.length, tiempo]);
+
+  return (
+    <section className="mb-14 w-full">
+      {/* Título con su margen normal */}
+      <div className="flex justify-between items-end px-6 mb-4">
+        <div>
+          <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.3em]">
+            {subtitulo}
+          </p>
+          <h2 className="text-2xl font-[1000] italic uppercase text-[#1F2937] leading-none">
+            {titulo}
+          </h2>
+        </div>
+        {items.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              onClick={() =>
+                scrollRef.current?.scrollBy({ left: -240, behavior: "smooth" })
+              }
+              className="w-9 h-9 bg-white border border-orange-100 rounded-full flex items-center justify-center text-xs shadow-sm"
+            >
+              ←
+            </button>
+            <button
+              onClick={() =>
+                scrollRef.current?.scrollBy({ left: 240, behavior: "smooth" })
+              }
+              className="w-9 h-9 bg-white border border-orange-100 rounded-full flex items-center justify-center text-xs shadow-sm"
+            >
+              →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {items.length > 0 ? (
+        <div
+          ref={scrollRef}
+          /* EXPLICACIÓN PARA JOSE: 
+             px-6 -> Crea el aire a los dos lados (izquierda y derecha por igual).
+             -mx-0 -> Asegura que no haya márgenes raros.
+          */
+          className="flex gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory px-96"
+        >
+          {items.map((p: any) => (
+            <div key={p.id} className="w-[190px] flex-shrink-0 snap-start">
+              <TarjetaProducto producto={p} onClick={() => abrirProducto(p)} />
+            </div>
+          ))}
+          {/* Este pequeño div es para que el último producto respire un poquito al final */}
+          <div className="min-w-[1px] flex-shrink-0" />
+        </div>
+      ) : (
+        <div className="px-6">
+          <div className="bg-white/50 border-2 border-dashed border-orange-100 rounded-[2rem] p-8 flex flex-col items-center justify-center text-center">
+            <span className="text-3xl mb-2 opacity-50">📦</span>
+            <p className="text-sm font-black text-slate-400 uppercase italic">
+              Pronto tendremos más productos
+            </p>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 export default function CatalogoKaori() {
   const [productos, setProductos] = useState<any[]>([]);
   const [busqueda, setBusqueda] = useState("");
@@ -222,7 +378,38 @@ export default function CatalogoKaori() {
       coincideBusqueda && coincideCatMadre && coincideSubCat && coincideOferta
     );
   });
+  // ─── LÓGICA DE VITRINA PARA NOVEDADES ───
+  const obtenerVitrinaNovedades = () => {
+    // 1. Sacamos los nombres de todas las categorías que tienes
+    const categorias = ["Tecno", "Electro", "PetShop", "Insumos", "Digital"];
 
+    // 2. Para cada categoría, buscamos el primer producto (el más nuevo)
+    const vitrina = categorias
+      .map((cat) => {
+        return productos.find((p) => p.categoria === cat);
+      })
+      .filter(Boolean); // Borramos si alguna categoría no tiene productos todavía
+
+    // 3. Mezclamos el orden para que cada vez que refresquen cambie
+    return vitrina.sort(() => Math.random() - 0.5);
+  };
+
+  const productosNovedades = obtenerVitrinaNovedades();
+  // ─── LÓGICA DE PRODUCTOS ALEATORIOS PARA LOS PASILLOS ───
+  const getAleatorios = (cat: string) => {
+    return productos
+      .filter((p) => p.categoria === cat)
+      .sort(() => Math.random() - 0.5) // Se mezclan al refrescar
+      .slice(0, 10); // Solo 10 para que sea ágil
+  };
+
+  const tecnoRandom = getAleatorios("Tecno");
+  const electroRandom = getAleatorios("Electro");
+  const petRandom = getAleatorios("PetShop");
+  const insumosRandom = getAleatorios("Insumos");
+  const pdfRandom = getAleatorios("PDF");
+  const digitalRandom = getAleatorios("Digital");
+  const outletRandom = getAleatorios("Outlet");
   // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ─── // NO QUITAR
   // Sirve para que el celular crea que "entraste" a otra página y habilite el botón de volver. // NO QUITAR
   const abrirProducto = (p: any) => {
@@ -537,8 +724,8 @@ export default function CatalogoKaori() {
       {/* ─── LISTADO (ALTO CONTRASTE) ─── */}
       <div className="px-5 flex justify-between items-end mb-8">
         <div>
-          <p className="text-[9px] font-black text-[#F97316] uppercase tracking-[0.4em] mb-1.5 drop-shadow-[0_0_5px_rgba(249,115,22,0.1)]">
-            CATÁLOGO OFICIAL
+          <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.3em] mb-1">
+            Lo más reciente
           </p>
           <h2 className="text-3xl font-black italic uppercase tracking-tighter text-[#1F2937] leading-none">
             {soloOfertas
@@ -589,18 +776,111 @@ export default function CatalogoKaori() {
       </AnimatePresence>
 
       {/* PRODUCTOS */}
-      <div className="px-4 grid grid-cols-2 gap-5">
-        {productosFiltrados.map((p) => (
-          <TarjetaProducto
-            key={p.id}
-            producto={p}
-            onClick={() => abrirProducto(p)}
-            // 👇 AÑADE ESTAS PROPS PARA MATAR LA REDUNDANCIA
-            ubicacion={ubicacion}
-            regionNombre={regionNombre}
-            vincularGps={vincularGps}
-          />
-        ))}
+      {/* ─── PASILLOS INTELIGENTES DE KAORI STORE ─── */}
+      <div className="pb-32">
+        {categoriaSel === "Todo" && !busqueda && !soloOfertas ? (
+          <>
+            {/* 1. SECCIÓN NOVEDADES (Corregido el nombre de la variable) */}
+            <div className="px-6 mb-14">
+              <div className="grid grid-cols-2 gap-5">
+                {productosNovedades.map((p) => (
+                  <TarjetaProducto
+                    key={p.id}
+                    producto={p}
+                    onClick={() => abrirProducto(p)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 2. PASILLO HOGAR */}
+            <CarruselSeccion
+              titulo="Hogar"
+              subtitulo="Electrodomésticos Pro"
+              items={electroRandom}
+              abrirProducto={abrirProducto}
+              tiempo={6000}
+            />
+            {/* 3. PASILLO TECNOLOGÍA */}
+            <CarruselSeccion
+              titulo="Tecnología"
+              subtitulo="Gamer & Accesorios"
+              items={tecnoRandom}
+              abrirProducto={abrirProducto}
+              tiempo={9500}
+            />
+
+            {/* 4. PASILLO MASCOTAS */}
+            <CarruselSeccion
+              titulo="Mascotas"
+              subtitulo="Pet Shop & Care"
+              items={petRandom}
+              abrirProducto={abrirProducto}
+              tiempo={7200}
+            />
+
+            {/* 5. PASILLO INSUMOS MÉDICOS */}
+            <CarruselSeccion
+              titulo="Salud"
+              subtitulo="Insumos Médicos"
+              items={insumosRandom}
+              abrirProducto={abrirProducto}
+              tiempo={11000}
+            />
+
+            {/* BANNER PUBLICITARIO */}
+            {/* ─── REMPLAZO: CARRUSEL DE MARCAS EN LUGAR DEL BANNER OSCURO ─── */}
+            <div className="my-14">
+              <MarcasAliadas />
+            </div>
+
+            {/* 6. PASILLO DIGITAL */}
+            <CarruselSeccion
+              titulo="Juegos y Licencias"
+              subtitulo="Entretenimiento Digital"
+              items={digitalRandom}
+              abrirProducto={abrirProducto}
+            />
+
+            {/* 6. PASILLO DIGITAL */}
+            <CarruselSeccion
+              titulo="Juegos y Licencias"
+              subtitulo="Entretenimiento Digital"
+              items={digitalRandom}
+              abrirProducto={abrirProducto}
+            />
+
+            {/* 7. PASILLO PDFs */}
+            <CarruselSeccion
+              titulo="Lectura"
+              subtitulo="Libros y PDFs"
+              items={pdfRandom}
+              abrirProducto={abrirProducto}
+            />
+
+            {/* 8. PASILLO OUTLET */}
+            <CarruselSeccion
+              titulo="Outlet"
+              subtitulo="Ofertas Medio Uso"
+              items={outletRandom}
+              abrirProducto={abrirProducto}
+            />
+          </>
+        ) : (
+          /* ─── MODO LISTA LARGA (Cuando el cliente busca o filtra) ─── */
+          <div className="px-4 grid grid-cols-2 gap-5">
+            {productosFiltrados.map((p) => (
+              <TarjetaProducto
+                key={p.id}
+                producto={p}
+                onClick={() => abrirProducto(p)}
+                ubicacion={ubicacion}
+                regionNombre={regionNombre}
+                vincularGps={vincularGps}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ─── NAVBAR INFERIOR (MODERNO E IOS STYLE) ─── */}
