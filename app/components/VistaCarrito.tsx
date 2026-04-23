@@ -32,10 +32,6 @@ export default function VistaCarrito({
   regionNombre, // <--- AÑADE ESTO
   vincularGps,
 }: Props) {
-  console.log(
-    "IDs actuales en el carrito:",
-    carrito.map((i) => i.id),
-  );
   useEffect(() => {
     if (isOpen) {
       window.history.pushState({ cartOpen: true }, "");

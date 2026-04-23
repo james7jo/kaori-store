@@ -27,6 +27,7 @@ export default function CatalogoKaori() {
   const [modoManual, setModoManual] = useState(false);
   // 1. Declaramos el carrito, pero primero intentamos leer si ya tiene algo guardado
   const [carrito, setCarrito] = useState<any[]>([]);
+  const [subCategoriaSel, setSubCategoriaSel] = useState("Todas");
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
@@ -92,33 +93,41 @@ export default function CatalogoKaori() {
     // 2. Pedir coordenadas al satélite
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        // 'async' es para que la API de mapas funcione
         clearTimeout(emergencia);
         const { latitude, longitude } = pos.coords;
-        const coordsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        const coordsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`; // URL corregida para que abra bien en celus
 
         try {
-          // 3. Preguntar a la API qué ciudad es esta latitud/longitud
+          // 1. EL CAMBIO CLAVE: Agregamos &addressdetails=1 al final de la URL
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
           );
           const data = await res.json();
 
-          // Sacamos el nombre de la ciudad, pueblo o municipio
-          const nombreDetectado =
-            data.address.city ||
-            data.address.town ||
-            data.address.village ||
-            data.address.county ||
-            "Bolivia (Destino)";
+          // 2. SACAMOS LAS PIEZAS: Calle, Barrio y Ciudad
+          const addr = data.address;
+          const calle = addr.road || addr.pedestrian || addr.path || "";
+          const barrio =
+            addr.suburb || addr.neighbourhood || addr.village || "";
+          const zona = addr.residential || addr.industrial || "";
+          const ciudad = addr.city || addr.town || addr.county || "";
+          const postCode = addr.postcode ? `(CP ${addr.postcode})` : "";
 
-          // 4. Guardar todo en el Cerebro y en el Celular
+          // 3. ARMAMOS EL NOMBRE: Juntamos todo en una sola frase limpia
+          const nombreDetallado = [calle, zona, barrio, ciudad, postCode]
+            .filter(Boolean)
+            .join(", ");
+          setRegionNombre(nombreDetallado);
+
+          const finalName = nombreDetallado || "Ubicación Detectada ✅";
+
+          // 4. GUARDAR: En el estado y en la memoria del celular
           setUbicacion(coordsUrl);
-          setRegionNombre(nombreDetectado);
+          setRegionNombre(finalName);
           localStorage.setItem("ubicacion_kaori", coordsUrl);
-          localStorage.setItem("region_kaori", nombreDetectado);
+          localStorage.setItem("region_kaori", finalName);
         } catch (error) {
-          // Si el internet está lento y la API de mapas falla, ponemos un nombre genérico
+          // Si falla el internet, al menos tenemos las coordenadas
           setUbicacion(coordsUrl);
           setRegionNombre("Ubicación Detectada ✅");
         }
@@ -126,7 +135,6 @@ export default function CatalogoKaori() {
         setLoadingGps(false);
       },
       (error) => {
-        // Si el usuario rechaza el GPS o está apagado
         clearTimeout(emergencia);
         setLoadingGps(false);
         setModoManual(true);
@@ -163,6 +171,13 @@ export default function CatalogoKaori() {
     { id: "Digital", icon: "🎮", label: "Juegos y Licencias" },
     { id: "Outlet", icon: "💎", label: "Ofertas Medio Uso" },
   ];
+  const subCategorias: Record<string, { id: string; label: string }[]> = {
+    Tecno: [
+      { id: "PC", label: "Acces. y Comp. de PC" },
+      { id: "Celular", label: "Accesorios para Celular" },
+    ],
+    // Puedes agregar más subcategorías para Electro, PetShop, etc.
+  };
 
   // ─── CARGA DE PRODUCTOS DESDE SUPABASE ─── // NO QUITAR
   useEffect(() => {
@@ -185,19 +200,27 @@ export default function CatalogoKaori() {
     cargarProductos();
   }, []);
 
-  // ─── LÓGICA DE FILTRADO ─── // NO QUITAR
+  // ─── LÓGICA DE FILTRADO CORREGIDA ───
   const productosFiltrados = productos.filter((p) => {
+    // 1. Búsqueda por texto
     const coincideBusqueda = p.nombre
       .toLowerCase()
       .includes(busqueda.toLowerCase());
+
+    // 2. Filtro de Ofertas
     const coincideOferta = !soloOfertas || (p.descuento && p.descuento !== "");
-    const coincideCat =
-      categoriaSel === "Todo" ||
-      p.categoria === categoriaSel ||
-      p.descripcion?.toLowerCase().includes(categoriaSel.toLowerCase()) ||
-      p.categoria?.toLowerCase().includes(categoriaSel.toLowerCase()) ||
-      p.nombre?.toLowerCase().includes(categoriaSel.toLowerCase());
-    return coincideBusqueda && coincideCat && coincideOferta;
+
+    // 3. Filtro de Categoría Madre (Tecno, Electro, etc.)
+    const coincideCatMadre =
+      categoriaSel === "Todo" || p.categoria === categoriaSel;
+
+    // 4. Filtro de Sub-categoría (PC, Celular)
+    const coincideSubCat =
+      subCategoriaSel === "Todas" || p.subcategoria === subCategoriaSel;
+
+    return (
+      coincideBusqueda && coincideCatMadre && coincideSubCat && coincideOferta
+    );
   });
 
   // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ─── // NO QUITAR
@@ -529,6 +552,41 @@ export default function CatalogoKaori() {
           {productosFiltrados.length} Productos
         </div>
       </div>
+      <AnimatePresence>
+        {categoriaSel === "Tecno" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="px-5 mb-6 flex gap-2 overflow-x-auto no-scrollbar"
+          >
+            <button
+              onClick={() => setSubCategoriaSel("Todas")}
+              className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
+                subCategoriaSel === "Todas"
+                  ? "bg-[#1F2937] border-transparent text-white shadow-lg"
+                  : "bg-white border-gray-100 text-gray-400"
+              }`}
+            >
+              Todo
+            </button>
+
+            {subCategorias["Tecno"].map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => setSubCategoriaSel(sub.id)}
+                className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
+                  subCategoriaSel === sub.id
+                    ? "bg-[#F97316] border-transparent text-white shadow-lg"
+                    : "bg-white border-gray-100 text-gray-400"
+                }`}
+              >
+                {sub.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* PRODUCTOS */}
       <div className="px-4 grid grid-cols-2 gap-5">

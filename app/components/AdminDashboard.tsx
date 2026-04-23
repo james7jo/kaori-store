@@ -19,6 +19,7 @@ interface Producto {
   stock?: number;
   consultas?: number;
   categoria?: string;
+  subcategoria?: string;
   estado?: string;
 }
 
@@ -31,6 +32,7 @@ type FormState = {
   descuento: string;
   stock: string;
   categoria: string;
+  subcategoria: string;
   estado: string;
 };
 
@@ -43,18 +45,23 @@ const FORM_VACIO: FormState = {
   descuento: "",
   stock: "",
   categoria: "Todo",
+  subcategoria: "Todas",
   estado: "nuevo",
 };
 
 const OPCIONES_CATEGORIA = [
   { id: "Todo", label: "General / Novedades" },
-  { id: "Tecno", label: "Tecnologia y Audífonos" },
+  { id: "Tecno", label: "Tecnologia y accesorios" },
   { id: "Electro", label: "Electro & hogar" },
   { id: "Insumos", label: "Insumos Médicos" },
   { id: "PDF", label: "Libros y PDFs" },
   { id: "Digital", label: "Juegos y Licencias" },
   { id: "Outlet", label: "Ofertas Medio Uso" },
   { id: "PetShop", label: "Pet Shop / Mascotas" },
+];
+const OPCIONES_SUB_TECNO = [
+  { id: "PC", label: "💻 Componentes de PC" },
+  { id: "Celular", label: "📱 Accesorios para Celular" },
 ];
 const OPCIONES_ESTADO = [
   { id: "nuevo", label: "✨ Nuevo " },
@@ -341,6 +348,7 @@ export default function AdminDashboardKaori() {
       stock: p.stock !== undefined ? String(p.stock) : "",
       categoria: p.categoria || "Todo",
       estado: p.estado || "nuevo",
+      subcategoria: (p as any).subcategoria || "Todas",
     });
     setSeccion("agregar");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -427,6 +435,7 @@ export default function AdminDashboardKaori() {
         descuento: form.descuento || null,
         stock: nuevoStock,
         categoria: form.categoria || "Todo",
+        subcategoria: form.categoria === "Tecno" ? form.subcategoria : null,
         estado: form.estado,
         vendidos: nuevosVendidos, // 👈 Guardamos el cálculo automático
       };
@@ -669,6 +678,47 @@ export default function AdminDashboardKaori() {
                           </div>
                         </div>
                       </Campo>
+                      <AnimatePresence>
+                        {form.categoria === "Tecno" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <Campo label="Sub-Categoría de Tecnología">
+                              <div className="relative">
+                                <select
+                                  value={form.subcategoria}
+                                  onChange={(e) =>
+                                    setForm({
+                                      ...form,
+                                      subcategoria: e.target.value,
+                                    })
+                                  }
+                                  className={`${inputCls} border-orange-500/40 bg-orange-500/5`}
+                                >
+                                  <option value="Todas" className="bg-[#111]">
+                                    Seleccionar sub-tipo...
+                                  </option>
+                                  {OPCIONES_SUB_TECNO.map((opt) => (
+                                    <option
+                                      key={opt.id}
+                                      value={opt.id}
+                                      className="bg-[#111]"
+                                    >
+                                      {opt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-orange-500">
+                                  ▼
+                                </div>
+                              </div>
+                            </Campo>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       <div className="grid grid-cols-2 gap-4">
                         <Campo label="Precio (Bs)">
                           <input

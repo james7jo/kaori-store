@@ -73,7 +73,7 @@ export default function AdminPage() {
         setAutorizado(true);
       }
     } else {
-      alert("Ese no es el nombre... concéntrate, amor 💀");
+      alert("Ese no es el nombre... concéntrate, 💀");
     }
   };
 
@@ -99,14 +99,14 @@ export default function AdminPage() {
           </h1>
 
           <p className="text-gray-500 font-bold text-[10px] uppercase tracking-[0.3em] mb-10">
-            Esta es nuestra tienda virtual, amor.
+            Esta es nuestra tienda virtual.
           </p>
 
           <div className="bg-black/50 p-6 rounded-2xl border border-red-600/20 mb-8">
             <p className="text-gray-300 font-bold italic text-base leading-tight">
               Para ingresar debes contestar esta pregunta: <br />
               <span className="text-red-500 block mt-2 uppercase not-italic text-sm tracking-widest">
-                ¿Como llamariamos a nuestro hijo varón?
+                ¿Como se llamaria tu hijo?
               </span>
             </p>
           </div>
@@ -127,10 +127,6 @@ export default function AdminPage() {
               INGRESAR AL PANEL
             </button>
           </form>
-
-          <p className="mt-10 text-[9px] text-gray-700 font-black uppercase tracking-[0.4em]">
-            Propiedad de Jose & Gina
-          </p>
         </motion.div>
 
         {/* Viñeta roja en las esquinas para dar profundidad */}
