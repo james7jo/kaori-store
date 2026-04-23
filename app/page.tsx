@@ -95,6 +95,8 @@ function CarruselSeccion({
   items,
   abrirProducto,
   tiempo = 8000,
+  categoriaId, // <--- Nueva prop
+  setCategoriaSel,
 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -128,21 +130,15 @@ function CarruselSeccion({
         </div>
         {items.length > 0 && (
           <div className="flex gap-2">
+            {/* BOTÓN VER MÁS - Reemplaza tus flechas con esto */}
             <button
-              onClick={() =>
-                scrollRef.current?.scrollBy({ left: -240, behavior: "smooth" })
-              }
-              className="w-9 h-9 bg-white border border-orange-100 rounded-full flex items-center justify-center text-xs shadow-sm"
+              onClick={() => {
+                setCategoriaSel(categoriaId);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="px-4 py-2 bg-white border border-orange-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#F97316] shadow-sm active:scale-95 transition-all"
             >
-              ←
-            </button>
-            <button
-              onClick={() =>
-                scrollRef.current?.scrollBy({ left: 240, behavior: "smooth" })
-              }
-              className="w-9 h-9 bg-white border border-orange-100 rounded-full flex items-center justify-center text-xs shadow-sm"
-            >
-              →
+              Ver más
             </button>
           </div>
         )}
@@ -582,24 +578,37 @@ export default function CatalogoKaori() {
                   </a>
                 </div>
 
-                {/* WHATSAPP SOPORTE */}
-                <a
-                  href="https://wa.me/59174244882"
-                  target="_blank"
-                  className="flex items-center justify-between p-5 bg-[#22c55e] rounded-[2.2rem] text-white shadow-[0_15px_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
-                >
-                  <div className="text-left">
-                    <p className="text-[9px] font-black text-white/70 uppercase">
-                      Atención Inmediata
-                    </p>
-                    <p className="text-xs font-black uppercase italic">
-                      WhatsApp Oficial
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    💬
-                  </div>
-                </a>
+                {/* CONTENEDOR DE BOTONES DE ACCIÓN */}
+                <div className="flex items-stretch gap-3">
+                  {/* 👤 BOTÓN ADMIN "PUERTA SECRETA" PREMIUM */}
+                  <Link
+                    href="/admin"
+                    className="w-14 bg-[#1F2937] rounded-[1.8rem] flex items-center justify-center shadow-[0_10px_20px_rgba(0,0,0,0.1)] border border-white/10 active:scale-90 transition-all group"
+                  >
+                    <span className="text-lg filter grayscale group-hover:grayscale-0 transition-all drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                      👤
+                    </span>
+                  </Link>
+
+                  {/* 🟢 WHATSAPP SOPORTE (Ahora dentro del flex) */}
+                  <a
+                    href="https://wa.me/59174244882"
+                    target="_blank"
+                    className="flex-1 flex items-center justify-between p-5 bg-[#22c55e] rounded-[2.2rem] text-white shadow-[0_15px_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
+                  >
+                    <div className="text-left">
+                      <p className="text-[9px] font-black text-white/70 uppercase">
+                        Atención Inmediata
+                      </p>
+                      <p className="text-xs font-black uppercase italic">
+                        WhatsApp Oficial
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                      💬
+                    </div>
+                  </a>
+                </div>
               </div>
             </motion.div>
           </>
@@ -609,13 +618,22 @@ export default function CatalogoKaori() {
       {/* ─── HEADER (SOLIDEZ Y ENERGÍA) ─── */}
       <div className="p-4 flex justify-between items-center bg-white/95 backdrop-blur-xl sticky top-0 z-40 border-b border-[#F97316]/10 shadow-sm">
         <div className="flex flex-col">
-          <Link href="/admin" className="group flex items-center gap-2">
-            {/* Mini Emblema K: Para que no sea solo texto aburrido */}
+          <button
+            onClick={() => {
+              setCategoriaSel("Todo"); // Esto activa las Novedades y los carruseles
+              setSoloOfertas(false); // Apaga el filtro de ofertas
+              setBusqueda(""); // Borra lo que haya escrito en el buscador
+              setBuscadorVisible(false); // Cierra el buscador si estaba abierto
+              window.scrollTo({ top: 0, behavior: "smooth" }); // Sube al inicio suavemente
+            }}
+            className="group flex items-center gap-2 active:scale-95 transition-transform"
+          >
+            {/* Mini Emblema K */}
             <div className="w-8 h-8 bg-[#F97316] rounded-lg flex items-center justify-center shadow-[0_4px_12px_rgba(249,115,22,0.3)] group-hover:rotate-6 transition-transform">
               <span className="text-white text-xl font-black italic">K</span>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <h1
                 translate="no"
                 className="text-2xl font-[1000] italic tracking-[-0.05em] uppercase leading-none"
@@ -626,7 +644,7 @@ export default function CatalogoKaori() {
                 </span>
               </h1>
             </div>
-          </Link>
+          </button>
         </div>
         <div className="flex gap-2">
           <button
@@ -803,10 +821,12 @@ export default function CatalogoKaori() {
             {/* 2. PASILLO HOGAR */}
             <CarruselSeccion
               titulo="Hogar"
-              subtitulo="Electrodomésticos Pro"
+              subtitulo="Electrodomésticos y Hogar"
               items={electroRandom}
               abrirProducto={abrirProducto}
               tiempo={6000}
+              categoriaId="Electro"
+              setCategoriaSel={setCategoriaSel}
             />
             {/* 3. PASILLO TECNOLOGÍA */}
             <CarruselSeccion
@@ -815,6 +835,8 @@ export default function CatalogoKaori() {
               items={tecnoRandom}
               abrirProducto={abrirProducto}
               tiempo={9500}
+              categoriaId="Tecno"
+              setCategoriaSel={setCategoriaSel}
             />
 
             {/* 4. PASILLO MASCOTAS */}
@@ -824,6 +846,8 @@ export default function CatalogoKaori() {
               items={petRandom}
               abrirProducto={abrirProducto}
               tiempo={7200}
+              categoriaId="PetShop"
+              setCategoriaSel={setCategoriaSel}
             />
 
             {/* 5. PASILLO INSUMOS MÉDICOS */}
@@ -833,6 +857,8 @@ export default function CatalogoKaori() {
               items={insumosRandom}
               abrirProducto={abrirProducto}
               tiempo={11000}
+              categoriaId="Insumos"
+              setCategoriaSel={setCategoriaSel}
             />
 
             {/* BANNER PUBLICITARIO */}
@@ -847,14 +873,8 @@ export default function CatalogoKaori() {
               subtitulo="Entretenimiento Digital"
               items={digitalRandom}
               abrirProducto={abrirProducto}
-            />
-
-            {/* 6. PASILLO DIGITAL */}
-            <CarruselSeccion
-              titulo="Juegos y Licencias"
-              subtitulo="Entretenimiento Digital"
-              items={digitalRandom}
-              abrirProducto={abrirProducto}
+              categoriaId="Digital"
+              setCategoriaSel={setCategoriaSel}
             />
 
             {/* 7. PASILLO PDFs */}
@@ -863,6 +883,8 @@ export default function CatalogoKaori() {
               subtitulo="Libros y PDFs"
               items={pdfRandom}
               abrirProducto={abrirProducto}
+              categoriaId="PDF"
+              setCategoriaSel={setCategoriaSel}
             />
 
             {/* 8. PASILLO OUTLET */}
@@ -871,6 +893,8 @@ export default function CatalogoKaori() {
               subtitulo="Ofertas Medio Uso"
               items={outletRandom}
               abrirProducto={abrirProducto}
+              categoriaId="Outlet"
+              setCategoriaSel={setCategoriaSel}
             />
           </>
         ) : (
