@@ -51,13 +51,15 @@ function MarcasAliadas() {
 
   return (
     <div className="w-full py-10 bg-white overflow-hidden border-y border-orange-50">
-      {/* Contenedor del scroll infinito */}
-      <div className="flex w-[800%] gap-1 animate-scroll-marcas">
-        {/* Renderizamos las marcas dos veces para que el ciclo sea infinito e invisible */}
+      {/* Cambiamos el ancho a w-max para que se ajuste al contenido real 
+         y no a un porcentaje inventado.
+      */}
+      <div className="flex w-max gap-8 animate-scroll-marcas hover:[animation-play-state:paused]">
+        {/* Renderizamos las marcas dos veces: esto crea la ilusión de la cola */}
         {[...marcas, ...marcas].map((marca, i) => (
           <div
             key={i}
-            className="flex-shrink-0 flex items-center justify-center min-w-[100px]"
+            className="flex-shrink-0 flex items-center justify-center px-10"
           >
             <span className="text-xl font-[1000] italic uppercase tracking-tighter text-slate-300 hover:text-[#F97316] transition-colors cursor-default">
               {marca}
@@ -72,11 +74,16 @@ function MarcasAliadas() {
             transform: translateX(0);
           }
           100% {
+            /* Se mueve exactamente la mitad de la tira completa.
+               Como pusimos la lista 2 veces, al llegar al final de la primera,
+               salta al inicio y parece que la fila nunca terminó.
+            */
             transform: translateX(-50%);
           }
         }
         .animate-scroll-marcas {
-          animation: scroll-marcas 30s linear infinite;
+          /* 40s para que sea un paseo suave y no corra */
+          animation: scroll-marcas 80s linear infinite;
         }
       `}</style>
     </div>
