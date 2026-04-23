@@ -380,7 +380,7 @@ export default function AdminDashboardKaori() {
       let urlPrincipal = form.imagen;
       let urlsGaleria = form.galeria ? form.galeria.split(",") : [];
 
-      // ... (Mantenemos tu lógica de subida de imágenes igual)
+      // --- SUBIDA DE IMAGEN PRINCIPAL ---
       if (fPrincipal) {
         const nom = `${Date.now()}_main.png`;
         const { error: uploadError } = await supabase.storage
@@ -391,6 +391,7 @@ export default function AdminDashboardKaori() {
           .data.publicUrl;
       }
 
+      // --- SUBIDA DE GALERÍA ---
       if (fGaleria && fGaleria.length > 0) {
         const nuevasUrls: string[] = [];
         for (let i = 0; i < fGaleria.length; i++) {
@@ -409,41 +410,51 @@ export default function AdminDashboardKaori() {
       let nuevosVendidos = 0;
 
       if (idEditando) {
-        // Buscamos el producto actual en nuestro estado para comparar
         const productoOriginal = productos.find((p) => p.id === idEditando);
         if (productoOriginal) {
           const stockAnterior = productoOriginal.stock || 0;
           const vendidosAnteriores = productoOriginal.vendidos || 0;
           const diferencia = stockAnterior - nuevoStock;
-
-          // Si la diferencia es positiva, es una venta
           if (diferencia > 0) {
             nuevosVendidos = vendidosAnteriores + diferencia;
           } else {
-            // Si el stock subió o es igual, mantenemos los vendidos que ya tenía
             nuevosVendidos = vendidosAnteriores;
           }
         }
       }
 
+      // ─── LÓGICA ANTI-FLOJERA PARA DESCUENTOS (PORCENTAJE AUTOMÁTICO) ───
+      let descuentoParaGuardar: string | null = form.descuento.trim();
+      if (descuentoParaGuardar !== "") {
+        // Quitamos espacios por si acaso
+        descuentoParaGuardar = descuentoParaGuardar.replace(/\s+/g, "");
+        // Si no tiene el %, se lo ponemos nosotros
+        if (!descuentoParaGuardar.includes("%")) {
+          descuentoParaGuardar = `${descuentoParaGuardar}%`;
+        }
+      } else {
+        descuentoParaGuardar = null;
+      }
+
+      // --- PREPARACIÓN DE DATOS FINAL ---
       const datos: any = {
         nombre: form.nombre,
         precio: parseFloat(form.precio),
         descripcion: form.descripcion,
         imagen: urlPrincipal,
         galeria: urlsGaleria.join(","),
-        descuento: form.descuento || null,
+        descuento: descuentoParaGuardar, // Usamos la variable procesada arriba
         stock: nuevoStock,
         categoria: form.categoria || "Todo",
         subcategoria: form.categoria === "Tecno" ? form.subcategoria : null,
         estado: form.estado,
-        vendidos: nuevosVendidos, // 👈 Guardamos el cálculo automático
+        vendidos: nuevosVendidos,
       };
 
+      // --- GUARDADO EN SUPABASE ---
       if (idEditando) {
         await supabase.from("productos").update(datos).eq("id", idEditando);
       } else {
-        // Si es producto nuevo, empieza con 0 vendidos y 0 consultas
         await supabase
           .from("productos")
           .insert([{ ...datos, vendidos: 0, consultas: 0 }]);
