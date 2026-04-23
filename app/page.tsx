@@ -151,7 +151,7 @@ function CarruselSeccion({
              px-6 -> Crea el aire a los dos lados (izquierda y derecha por igual).
              -mx-0 -> Asegura que no haya márgenes raros.
           */
-          className="flex gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory px-96"
+          className="flex gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory px-6"
         >
           {items.map((p: any) => (
             <div key={p.id} className="w-[190px] flex-shrink-0 snap-start">
@@ -476,7 +476,7 @@ export default function CatalogoKaori() {
 
   return (
     // ─── EL FONDO ES SUNSET CREAM (#FFF8F1) - CLARO Y ENÉRGICO ─── // NO QUITAR
-    <div className="min-h-screen bg-[#FFF8F1] text-[#1F2937] font-sans pb-40 overflow-x-hidden">
+    <div className="bg-[#FFF8F1] text-[#1F2937] font-sans pb-10 overflow-x-hidden">
       {/* ─── SIDEBAR PREMIUM (ESTILO CLARO) ─── */}
       <AnimatePresence>
         {menuAbierto && (
@@ -802,7 +802,7 @@ export default function CatalogoKaori() {
 
       {/* PRODUCTOS */}
       {/* ─── PASILLOS INTELIGENTES DE KAORI STORE ─── */}
-      <div className="pb-32">
+      <div className="pb-10">
         {categoriaSel === "Todo" && !busqueda && !soloOfertas ? (
           <>
             {/* 1. SECCIÓN NOVEDADES (Corregido el nombre de la variable) */}
