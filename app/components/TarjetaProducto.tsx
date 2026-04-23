@@ -199,22 +199,26 @@ export default function TarjetaProducto({ producto, onClick }: any) {
         </h3>
 
         {/* PRECIO + BADGE */}
+        {/* PRECIO + BADGE */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             {tieneDescuento && (
               <span className="text-[10px] text-gray-400 line-through">
                 Bs{" "}
                 {(() => {
-                  const precio = Number(producto.precio) || 0;
-                  const desc = producto.descuento.toString();
+                  const precioActual = Number(producto.precio) || 0;
+                  // Limpiamos el texto del descuento para quedarnos solo con el número
+                  const valorPorcentaje = parseFloat(
+                    producto.descuento.toString().replace("%", ""),
+                  );
 
-                  if (desc.includes("%")) {
-                    // Si pusiste "10%", calculamos el valor real para tacharlo
-                    const porcentaje = parseFloat(desc) / 100;
-                    return (precio / (1 - porcentaje)).toFixed(0);
-                  }
-                  // Si pusiste solo "10", sumamos directo
-                  return precio + (Number(desc) || 0);
+                  if (isNaN(valorPorcentaje) || valorPorcentaje >= 100)
+                    return precioActual;
+
+                  // Matemática inversa: Si el producto vale 75 y tiene 25% de desc,
+                  // el precio original era 100. (75 / 0.75)
+                  const factor = (100 - valorPorcentaje) / 100;
+                  return (precioActual / factor).toFixed(0);
                 })()}
               </span>
             )}
