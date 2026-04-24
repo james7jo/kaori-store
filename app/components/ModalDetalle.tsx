@@ -13,6 +13,27 @@ interface Props {
   modoManual: boolean;
   setModoManual: (val: boolean) => void;
 }
+const obtenerEmbedUrl = (url: string) => {
+  if (!url) return "";
+  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+    const id = url.includes("v=")
+      ? url.split("v=")[1]?.split("&")[0]
+      : url.split("/").pop();
+    // Quitamos mute=1 para que si el usuario le da play, suene.
+    // Pero dejamos autoplay=1 para intentar que arranque (aunque el navegador lo pausará hasta que toquen la pantalla)
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`;
+  }
+  // Nueva lógica para TikTok más compatible
+  if (url.includes("tiktok.com")) {
+    const parts = url.split("/video/");
+    if (parts.length > 1) {
+      const id = parts[1].split("?")[0];
+      // Usamos la URL de "v2" que es la más estable actualmente
+      return `https://www.tiktok.com/player/v1/${id}?&music_info=1&description=1`;
+    }
+  }
+  return url;
+};
 export default function ModalDetalle({
   producto,
   onClose,
@@ -33,20 +54,29 @@ export default function ModalDetalle({
   const [activeTab, setActiveTab] = useState("detalle");
   const [agregado, setAgregado] = useState(false);
 
-  const fotos = producto.galeria
+  const fotosBase = producto.galeria
     ? [producto.imagen, ...producto.galeria.split(",").filter(Boolean)]
     : [producto.imagen];
+
+  // Si tiene video, el total de "páginas" en el carrusel aumenta
+  const tieneVideo = Boolean(producto.video_url);
+  const totalSlides = tieneVideo ? fotosBase.length + 1 : fotosBase.length;
   // --- 1. LÓGICA DE CARRUSEL AUTOMÁTICO ---
   useEffect(() => {
-    // Si solo hay una foto o el usuario está viendo el Zoom, no rotamos
-    if (fotos.length <= 1 || showImageModal) return;
+    // 1. Si no hay más de una foto, o está el zoom abierto, NO hacemos nada
+    if (fotosBase.length <= 1 || showImageModal) return;
 
+    // 2. ¡CLAVE!: Si estamos en el video (indexFoto === 0 y tieneVideo),
+    // pausamos el carrusel automático para que el cliente vea el video tranquilo.
+    if (tieneVideo && indexFoto === 0) return;
+
+    // 3. Si son fotos normales, activamos el temporizador
     const intervalo = setInterval(() => {
-      setIndexFoto((prev) => (prev + 1) % fotos.length);
-    }, 3500); // Cambia cada 3.5 segundos
+      setIndexFoto((prev) => (prev + 1) % totalSlides);
+    }, 4500);
 
     return () => clearInterval(intervalo);
-  }, [fotos.length, showImageModal]);
+  }, [fotosBase.length, showImageModal, indexFoto, tieneVideo]);
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const dragX = useMotionValue(0);
@@ -166,33 +196,82 @@ _Fecha: ${fecha}_`;
                   setIndexFoto(indexFoto - 1);
                 else if (
                   info.offset.x < -threshold &&
-                  indexFoto < fotos.length - 1
+                  indexFoto < totalSlides - 1
                 )
                   setIndexFoto(indexFoto + 1);
                 dragX.set(0);
               }}
-              onClick={() => setShowImageModal(true)}
+              onClick={() => {
+                if (!(tieneVideo && indexFoto === 0)) {
+                  setShowImageModal(true);
+                }
+              }}
             >
               <AnimatePresence mode="wait">
-                <motion.img
-                  key={indexFoto}
-                  src={fotos[indexFoto]}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.5 }}
-                  className={`w-full h-full object-contain pointer-events-none ${
-                    producto.stock <= 0 ? "grayscale opacity-40" : ""
-                  }`}
-                  alt="Kaori Store"
-                />
+                {tieneVideo && indexFoto === 0 ? (
+                  <motion.div
+                    key="video"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full h-full relative overflow-hidden"
+                  >
+                    {/* Capa táctil inteligente estilo Stories */}
+                    <div className="absolute inset-0 z-40 flex">
+                      {/* Lado Izquierdo: Va a la última foto */}
+                      <div
+                        className="h-full w-1/4 active:bg-white/5"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIndexFoto(totalSlides - 1);
+                        }}
+                      />
+                      <div className="h-full w-2/4 pointer-events-none" />
+                      {/* Lado Derecho: VA A LA SIGUIENTE (index 1), NO SE QUEDA EN 1 */}
+                      <div
+                        className="h-full w-1/4 active:bg-white/5"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIndexFoto((prev) => (prev + 1) % totalSlides);
+                        }}
+                      />
+                    </div>
+
+                    <iframe
+                      src={obtenerEmbedUrl(producto.video_url)}
+                      className="w-full h-full border-0 rounded-[3rem]"
+                      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                      sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-popups"
+                      allowFullScreen
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.img
+                    // Usamos un ID único para la key
+                    key={`foto-${indexFoto}`}
+                    // ¡ESTA ES LA CLAVE!: Si hay video, la primera foto (index 1) es fotosBase[0]
+                    src={
+                      tieneVideo
+                        ? fotosBase[indexFoto - 1]
+                        : fotosBase[indexFoto]
+                    }
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.1 }}
+                    transition={{ duration: 0.5 }}
+                    className={`w-full h-full object-contain pointer-events-none ${
+                      producto.stock <= 0 ? "grayscale opacity-40" : ""
+                    }`}
+                    alt="Kaori Store"
+                  />
+                )}
               </AnimatePresence>
             </motion.div>
 
             {/* PUNTOS INDICADORES DINÁMICOS */}
-            {fotos.length > 1 && (
+            {totalSlides > 1 && (
               <div className="absolute bottom-6 flex gap-2 left-1/2 -translate-x-1/2 bg-white/60 px-4 py-2.5 rounded-full shadow-sm backdrop-blur-md border border-white/20">
-                {fotos.map((_, i) => (
+                {Array.from({ length: totalSlides }).map((_, i) => (
                   <div
                     key={i}
                     className={`h-1.5 rounded-full transition-all duration-700 ${
@@ -1020,7 +1099,14 @@ _Fecha: ${fecha}_`;
             <motion.img
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
-              src={fotos[indexFoto]}
+              /* CLAVE: Usamos la misma lógica de resta que en la galería principal */
+              src={
+                tieneVideo
+                  ? indexFoto === 0
+                    ? fotosBase[0]
+                    : fotosBase[indexFoto - 1]
+                  : fotosBase[indexFoto]
+              }
               className="w-full h-full object-contain p-6"
               style={{ touchAction: "pinch-zoom" }}
               alt="Zoom"

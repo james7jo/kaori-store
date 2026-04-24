@@ -21,6 +21,7 @@ interface Producto {
   categoria?: string;
   subcategoria?: string;
   estado?: string;
+  video_url?: string;
 }
 
 type FormState = {
@@ -34,6 +35,7 @@ type FormState = {
   categoria: string;
   subcategoria: string;
   estado: string;
+  video_url: string;
 };
 
 const FORM_VACIO: FormState = {
@@ -47,6 +49,7 @@ const FORM_VACIO: FormState = {
   categoria: "Todo",
   subcategoria: "Todas",
   estado: "nuevo",
+  video_url: "",
 };
 
 const OPCIONES_CATEGORIA = [
@@ -344,6 +347,7 @@ export default function AdminDashboardKaori() {
       descripcion: p.descripcion,
       imagen: p.imagen,
       galeria: p.galeria ?? "",
+      video_url: p.video_url ?? "",
       descuento: p.descuento ?? "",
       stock: p.stock !== undefined ? String(p.stock) : "",
       categoria: p.categoria || "Todo",
@@ -443,6 +447,7 @@ export default function AdminDashboardKaori() {
         descripcion: form.descripcion,
         imagen: urlPrincipal,
         galeria: urlsGaleria.join(","),
+        video_url: form.video_url,
         descuento: descuentoParaGuardar, // Usamos la variable procesada arriba
         stock: nuevoStock,
         categoria: form.categoria || "Todo",
@@ -800,6 +805,26 @@ export default function AdminDashboardKaori() {
                             </button>
                           ))}
                         </div>
+                      </Campo>
+                      <Campo label="Link de Video (YouTube)">
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">
+                            🎬
+                          </span>
+                          <input
+                            type="url"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            value={form.video_url}
+                            onChange={(e) =>
+                              setForm({ ...form, video_url: e.target.value })
+                            }
+                            className={`${inputCls} pl-12 border-orange-500/20 focus:border-orange-500`}
+                          />
+                        </div>
+                        <p className="text-[9px] text-gray-500 italic mt-1 ml-2">
+                          * Pega el link directo. El sistema lo convertirá
+                          automáticamente para la tienda.
+                        </p>
                       </Campo>
                       <Campo label="Foto principal">
                         <input
