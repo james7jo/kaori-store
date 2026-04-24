@@ -21,7 +21,7 @@ const obtenerEmbedUrl = (url: string) => {
       : url.split("/").pop();
     // Quitamos mute=1 para que si el usuario le da play, suene.
     // Pero dejamos autoplay=1 para intentar que arranque (aunque el navegador lo pausará hasta que toquen la pantalla)
-    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`;
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0`;
   }
   // Nueva lógica para TikTok más compatible
   if (url.includes("tiktok.com")) {
