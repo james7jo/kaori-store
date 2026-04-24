@@ -384,7 +384,14 @@ export default function CatalogoKaori() {
   // ─── LÓGICA DE VITRINA PARA NOVEDADES ───
   const obtenerVitrinaNovedades = () => {
     // 1. Sacamos los nombres de todas las categorías que tienes
-    const categorias = ["Tecno", "Electro", "PetShop", "Insumos", "Digital"];
+    const categorias = [
+      "Tecno",
+      "Electro",
+      "PetShop",
+      "Insumos",
+      "Digital",
+      "Outlet",
+    ];
 
     // 2. Para cada categoría, buscamos el primer producto (el más nuevo)
     const vitrina = categorias
