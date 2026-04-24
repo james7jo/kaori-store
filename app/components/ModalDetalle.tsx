@@ -15,22 +15,18 @@ interface Props {
 }
 const obtenerEmbedUrl = (url: string) => {
   if (!url) return "";
-  if (url.includes("youtube.com") || url.includes("youtu.be")) {
-    const id = url.includes("v=")
-      ? url.split("v=")[1]?.split("&")[0]
-      : url.split("/").pop();
-    // Quitamos mute=1 para que si el usuario le da play, suene.
-    // Pero dejamos autoplay=1 para intentar que arranque (aunque el navegador lo pausará hasta que toquen la pantalla)
-    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0`;
-  }
-  // Nueva lógica para TikTok más compatible
-  if (url.includes("tiktok.com")) {
-    const parts = url.split("/video/");
-    if (parts.length > 1) {
-      const id = parts[1].split("?")[0];
-      // Usamos la URL de "v2" que es la más estable actualmente
-      return `https://www.tiktok.com/player/v1/${id}?&music_info=1&description=1`;
-    }
+  let videoId = "";
+  if (url.includes("v=")) videoId = url.split("v=")[1]?.split("&")[0];
+  else if (url.includes("youtu.be/"))
+    videoId = url.split("youtu.be/")[1]?.split("?")[0];
+  else if (url.includes("embed/"))
+    videoId = url.split("embed/")[1]?.split("?")[0];
+  else if (url.includes("shorts/"))
+    videoId = url.split("shorts/").pop()?.split("?")[0] || "";
+
+  if (videoId) {
+    // mute=1 permite autoplay, loop=1+playlist permite bucle infinito
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0`;
   }
   return url;
 };
