@@ -94,6 +94,7 @@ export default function SimuladorPago({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [errorSubida, setErrorSubida] = useState("");
+  const [mostrarGracias, setMostrarGracias] = useState(false);
 
   // Ubicación — guardamos texto Y coordenadas separados
   const [ubicacionTexto, setUbicacionTexto] = useState(regionNombre || "");
@@ -203,34 +204,49 @@ export default function SimuladorPago({
       };
       guardarPedido(pedido);
 
-      // ─── Link de Google Maps ─────────────────────────────────────────────
-      const linkMaps = ubicacionGps
-        ? `https://www.google.com/maps?q=${ubicacionGps.replace("https://www.google.com/maps?q=$", "")}`
-        : "No se proporcionó link";
+      // ─── LÓGICA DE LINK DE MAPA ULTRA PRECISO ──────────────────────────────────
+      // Prioridad 1: Coordenadas nuevas del botón interno
+      // Prioridad 2: link directo que viene por props (ubicacionGps)
+      // Prioridad 3: Texto de la región (si no hay GPS)
+
+      let linkMaps = "";
+
+      if (coordenadas) {
+        linkMaps = `https://www.google.com/maps?q=${coordenadas.lat},${coordenadas.lng}`;
+      } else if (ubicacionGps && ubicacionGps.includes(",")) {
+        // Si recibimos el link sucio de googleusercontent, limpiamos solo las coordenadas
+        const coordsLimpia =
+          ubicacionGps.split("q=")[1] || ubicacionGps.split("com/")[1] || "";
+        linkMaps = `https://www.google.com/maps?q=${coordsLimpia}`;
+      } else {
+        linkMaps = `https://www.google.com/maps/search/${encodeURIComponent(ubicacionTexto)}`;
+      }
+      // ─────────────────────────────────────────────────────────────────────────────
 
       const separador = "━━━━━━━━━━━━━━━━━━━━";
-      const precioPorUnidad = (total / cantidad).toFixed(2);
+      const detalleProductos =
+        carrito && carrito.length > 0
+          ? carrito
+              .map((item) => `• ${item.cantidad}x ${item.nombre.toUpperCase()}`)
+              .join("\n")
+          : `• ${cantidad}x ${productoNombre.toUpperCase()}`;
 
       const mensaje =
         `🧾 *NUEVO PEDIDO — KAORI STORE*\n${separador}\n` +
         `*ID:* ${pedido.id}\n` +
         `*Cliente:* ${nombre}\n` +
         `*Celular:* +591 ${celular}\n\n` +
-        `*Producto:* ${productoNombre.toUpperCase()}\n` +
-        `*Cantidad:* ${cantidad} unidad${cantidad > 1 ? "es" : ""}\n` +
-        `*Precio unit.:* ${precioPorUnidad} Bs\n` +
-        `*TOTAL:* ${Number(total).toFixed(2)} Bs\n\n` +
+        `*PRODUCTOS:*\n${detalleProductos}\n\n` +
+        `*TOTAL A PAGAR:* ${Number(total).toFixed(2)} Bs\n\n` +
         `*📍 Dirección:* ${ubicacionTexto}\n` +
-        (linkMaps ? `*📌 Mapa exacto:* ${linkMaps}\n` : "") +
-        `\n* Comprobante:*\n${imagenUrl}\n` +
+        `*📌 Mapa exacto:* ${linkMaps}\n` +
+        `\n*📷 Comprobante:* ${imagenUrl}\n` +
         `${separador}\n_${pedido.fecha}_`;
 
       const encoded = encodeURIComponent(mensaje);
 
-      // Abre WhatsApp 1 inmediatamente
       window.open(`https://wa.me/${WHATSAPP_1}?text=${encoded}`, "_blank");
 
-      // Abre WhatsApp 2 con 900ms de delay para que no se bloqueen
       setTimeout(() => {
         window.open(`https://wa.me/${WHATSAPP_2}?text=${encoded}`, "_blank");
       }, 900);
@@ -423,14 +439,20 @@ export default function SimuladorPago({
                       <p className="text-[13px] font-[900] text-emerald-800 mt-0.5 truncate">
                         {ubicacionTexto}
                       </p>
-                      {coordenadas && (
+                      {/* Link Maps si hay coordenadas en el Paso 4 */}
+                      {/* Esto usa las coordenadas del modal O el link que ya traíamos de la página principal */}
+                      {(coordenadas || ubicacionGps) && (
                         <a
-                          href={`https://maps.google.com/?q=${coordenadas.lat},${coordenadas.lng}`}
+                          href={
+                            coordenadas
+                              ? `https://www.google.com/maps?q=${coordenadas.lat},${coordenadas.lng}`
+                              : ubicacionGps
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[9px] font-black text-emerald-500 underline underline-offset-2 mt-0.5 block"
+                          className="flex items-center gap-2 text-[11px] font-black text-emerald-600 uppercase tracking-wider underline underline-offset-2"
                         >
-                          Ver en Google Maps →
+                          📌 Ver pin de entrega en Google Maps
                         </a>
                       )}
                     </div>
@@ -882,11 +904,148 @@ export default function SimuladorPago({
               </p>
 
               <button
-                onClick={onClose}
+                onClick={() => {
+                  // Confeti explosivo tipo celebración
+                  const count = 200;
+                  const defaults = { origin: { y: 0.7 } };
+
+                  function fire(particleRatio: number, opts: object) {
+                    confetti({
+                      ...defaults,
+                      ...opts,
+                      particleCount: Math.floor(count * particleRatio),
+                      colors: [
+                        "#F97316",
+                        "#EA580C",
+                        "#1A1A1A",
+                        "#FFF",
+                        "#FBBF24",
+                      ],
+                    });
+                  }
+
+                  fire(0.25, { spread: 26, startVelocity: 55 });
+                  fire(0.2, { spread: 60 });
+                  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+                  fire(0.1, {
+                    spread: 120,
+                    startVelocity: 25,
+                    decay: 0.92,
+                    scalar: 1.2,
+                  });
+                  fire(0.1, { spread: 120, startVelocity: 45 });
+
+                  // Serpentina desde los lados
+                  setTimeout(() => {
+                    confetti({
+                      particleCount: 80,
+                      angle: 60,
+                      spread: 80,
+                      origin: { x: 0 },
+                      colors: ["#F97316", "#FBBF24", "#FFF"],
+                    });
+                    confetti({
+                      particleCount: 80,
+                      angle: 120,
+                      spread: 80,
+                      origin: { x: 1 },
+                      colors: ["#F97316", "#EA580C", "#FFF"],
+                    });
+                  }, 300);
+
+                  setTimeout(() => {
+                    confetti({
+                      particleCount: 60,
+                      angle: 60,
+                      spread: 70,
+                      origin: { x: 0, y: 0.8 },
+                      colors: ["#F97316", "#FBBF24"],
+                    });
+                    confetti({
+                      particleCount: 60,
+                      angle: 120,
+                      spread: 70,
+                      origin: { x: 1, y: 0.8 },
+                      colors: ["#EA580C", "#FFF"],
+                    });
+                  }, 600);
+
+                  // Mostrar mensaje y luego cerrar
+                  setMostrarGracias(true);
+                  setTimeout(() => onClose(), 3200);
+                }}
                 className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-[900] uppercase tracking-tight text-[15px] transition-all active:scale-[0.98] shadow-lg shadow-emerald-200"
               >
                 Entendido, espero mi pedido 🎉
               </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* OVERLAY GRACIAS */}
+        <AnimatePresence>
+          {mostrarGracias && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center gap-6 px-8 rounded-[2.5rem]"
+            >
+              <motion.div
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", damping: 10, delay: 0.1 }}
+                className="text-7xl"
+              >
+                🎉
+              </motion.div>
+
+              <div className="text-center">
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-[11px] font-black uppercase tracking-[0.25em] text-[#F97316] mb-2"
+                >
+                  Kaori Store
+                </motion.p>
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-[30px] font-[900] text-[#1A1A1A] uppercase tracking-tight leading-tight"
+                >
+                  ¡Gracias por
+                  <br />
+                  confiar en
+                  <br />
+                  nosotros!
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-[12px] text-[#A09890] font-semibold mt-3 leading-relaxed"
+                >
+                  Tu pedido está en camino.
+                  <br />
+                  Te escribiremos pronto 💛
+                </motion.p>
+              </div>
+
+              <motion.div className="w-48 h-1.5 bg-[#F0EDE8] rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 2.8, ease: "linear", delay: 0.2 }}
+                  className="h-full bg-[#F97316] rounded-full"
+                />
+              </motion.div>
+
+              <p className="text-[9px] text-[#C4BFB6] font-bold uppercase tracking-widest">
+                Cerrando automáticamente...
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
