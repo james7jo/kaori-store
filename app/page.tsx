@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -187,6 +188,8 @@ export default function CatalogoKaori() {
   // 1. Declaramos el carrito, pero primero intentamos leer si ya tiene algo guardado
   const [carrito, setCarrito] = useState<any[]>([]);
   const [subCategoriaSel, setSubCategoriaSel] = useState("Todas");
+  const searchParams = useSearchParams();
+  const productoId = searchParams.get("p");
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
@@ -350,6 +353,10 @@ export default function CatalogoKaori() {
         if (error) throw error;
 
         setProductos(data || []);
+        if (productoId && data) {
+          const encontrado = data.find((p) => p.id.toString() === productoId);
+          if (encontrado) setSel(encontrado);
+        }
       } catch (error) {
         console.error("Error cargando productos:", error);
       } finally {
@@ -424,13 +431,14 @@ export default function CatalogoKaori() {
   // Sirve para que el celular crea que "entraste" a otra página y habilite el botón de volver. // NO QUITAR
   const abrirProducto = (p: any) => {
     setSel(p);
-    window.history.pushState({ modalOpen: true }, "");
+    // Agrega el ID a la URL de forma limpia
+    window.history.pushState({ modalOpen: true }, "", `?p=${p.id}`);
   };
 
-  // Evita que el historial del navegador se llene de basura si cierras el modal manualmente. // NO QUITAR
   const cerrarProducto = () => {
     setSel(null);
-    if (window.history.state?.modalOpen) window.history.back();
+    // Limpia la URL por completo al cerrar (así dejas de ver el p=15)
+    window.history.replaceState(null, "", window.location.pathname);
   };
 
   // ─── PANTALLA DE CARGA ─── // NO QUITAR
