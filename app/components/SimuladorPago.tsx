@@ -679,35 +679,42 @@ export default function SimuladorPago({
                 ))}
               </div>
 
-              {/* QR + monto */}
-              <div className="bg-[#FAFAF8] border-2 border-dashed border-[#E8E5DF] rounded-[2rem] p-6 flex flex-col items-center gap-4">
-                <div className="bg-white p-3 rounded-2xl shadow-sm border border-[#EDEAE4]">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=KaoriStorePago${total}&color=1A1A1A&bgcolor=FFFFFF`}
-                    className="w-36 h-36"
-                    alt="QR"
-                  />
+              {/* ZONA QR + MONTO */}
+              <div className="bg-[#FAFAF8] px-6 pt-6 pb-5 flex flex-col items-center gap-4">
+                <div className="relative">
+                  <div className="bg-white rounded-2xl shadow-md border border-[#E8E5DF] overflow-hidden">
+                    <img
+                      src="/QR-kaori.jpeg"
+                      className="w-64 h-64 object-contain block mx-auto p-4"
+                      alt="QR Pago"
+                    />
+                    {/* Botón descarga — fondo naranja para que no se pierda */}
+                    <a
+                      href="/QR-kaori.jpeg"
+                      download="QR-Kaori.jpeg"
+                      className="flex items-center justify-center gap-2 py-3 bg-[#FFF4EC] border-t-2 border-[#F97316] text-[11px] font-black uppercase tracking-widest text-[#F97316] hover:bg-[#F97316] hover:text-white transition-all active:scale-95"
+                    >
+                      <span>📥</span> Descargar QR para pagar
+                    </a>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-[10px] font-black uppercase text-[#A09890] tracking-wider mb-1">
-                    Monto exacto
+
+                <div className="text-center pt-2">
+                  <p className="text-[9px] font-black uppercase text-[#A09890] tracking-[0.2em] mb-1">
+                    Monto exacto a transferir
                   </p>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-[42px] font-[900] text-[#1A1A1A] leading-none">
+                    <span className="text-[44px] font-[1000] text-[#1A1A1A] leading-none tracking-tighter">
                       {Number(total).toFixed(2)}
                     </span>
                     <span className="text-[18px] font-black text-[#F97316]">
                       Bs
                     </span>
                   </div>
-                  <p className="text-[9px] text-[#C4BFB6] font-bold uppercase mt-1">
-                    No envíes un monto diferente
-                  </p>
                 </div>
               </div>
-
-              {/* Upload comprobante */}
-              <div>
+              {/* UPLOAD COMPROBANTE */}
+              <div className="px-6 pb-6 bg-white">
                 <label className="text-[10px] font-black uppercase text-[#A09890] tracking-wider ml-1 mb-2 block">
                   Comprobante de transferencia
                 </label>
