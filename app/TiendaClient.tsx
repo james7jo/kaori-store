@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -8,6 +7,7 @@ import TarjetaProducto from "./components/TarjetaProducto";
 import ModalDetalle from "./components/ModalDetalle";
 import { agregarAlCarrito } from "./components/CartContext";
 import VistaCarrito from "./components/VistaCarrito";
+import { useSearchParams } from "next/navigation";
 
 // ─── PALETA "SUNSET ENERGY" (CLARA Y PROFESIONAL) ─── // NO QUITAR
 // Fondo Base: #FFF8F1 (Crema/Naranja ultra claro, suave a la vista)
@@ -16,6 +16,7 @@ import VistaCarrito from "./components/VistaCarrito";
 // Acento Principal: #F97316 (Naranja consolidado, transmite energía y acción)
 // Acento Secundario/Hover: #EA580C (Naranja más oscuro para interacciones)
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 // ─── COMPONENTE PARA LAS FILAS HORIZONTALES ───
 import { useRef } from "react";
 
@@ -189,7 +190,7 @@ export function TiendaClient() {
   const [carrito, setCarrito] = useState<any[]>([]);
   const [subCategoriaSel, setSubCategoriaSel] = useState("Todas");
   const searchParams = useSearchParams();
-  const productoId = searchParams.get("p");
+  const productoIdUrl = searchParams.get("p");
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
@@ -353,8 +354,10 @@ export function TiendaClient() {
         if (error) throw error;
 
         setProductos(data || []);
-        if (productoId && data) {
-          const encontrado = data.find((p) => p.id.toString() === productoId);
+        if (productoIdUrl && data) {
+          const encontrado = data.find(
+            (p) => p.id.toString() === productoIdUrl,
+          );
           if (encontrado) setSel(encontrado);
         }
       } catch (error) {
@@ -364,7 +367,7 @@ export function TiendaClient() {
       }
     }
     cargarProductos();
-  }, []);
+  }, [productoIdUrl]);
 
   // ─── LÓGICA DE FILTRADO CORREGIDA ───
   const productosFiltrados = productos.filter((p) => {
@@ -428,17 +431,20 @@ export function TiendaClient() {
   const digitalRandom = getAleatorios("Digital");
   const outletRandom = getAleatorios("Outlet");
   // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ─── // NO QUITAR
-  // Sirve para que el celular crea que "entraste" a otra página y habilite el botón de volver. // NO QUITAR
+  // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ACTUALIZADO ───
   const abrirProducto = (p: any) => {
     setSel(p);
-    // Agrega el ID a la URL de forma limpia
-    window.history.pushState({ modalOpen: true }, "", `?p=${p.id}`);
+
+    // 1. Esto cambia la URL arriba a ?p=ID sin recargar la página
+    const nuevaUrl = `${window.location.pathname}?p=${p.id}`;
+    window.history.pushState({ modalOpen: true }, "", nuevaUrl);
   };
 
+  // Evita que el historial del navegador se llene de basura si cierras el modal manualmente. // NO QUITAR
   const cerrarProducto = () => {
     setSel(null);
-    // Limpia la URL por completo al cerrar (así dejas de ver el p=15)
     window.history.replaceState(null, "", window.location.pathname);
+    if (window.history.state?.modalOpen) window.history.back();
   };
 
   // ─── PANTALLA DE CARGA ─── // NO QUITAR
