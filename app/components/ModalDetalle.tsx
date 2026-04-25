@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import SimuladorPago from "@/app/components/SimuladorPago";
 
 interface Props {
   producto: any;
@@ -49,6 +50,7 @@ export default function ModalDetalle({
   const [showImageModal, setShowImageModal] = useState(false);
   const [activeTab, setActiveTab] = useState("detalle");
   const [agregado, setAgregado] = useState(false);
+  const [mostrandoPago, setMostrandoPago] = useState(false);
 
   const fotosBase = producto.galeria
     ? [producto.imagen, ...producto.galeria.split(",").filter(Boolean)]
@@ -162,10 +164,50 @@ _Fecha: ${fecha}_`;
             <div className="h-[2px] w-12 bg-[#F97316] rounded-full mt-0.5" />
           </div>
           <button
-            onClick={() => enviarWhatsApp("consulta")}
-            className="w-12 h-12 flex items-center justify-center text-2xl bg-orange-50 rounded-2xl text-[#F97316]"
+            onClick={() => {
+              const url = window.location.href;
+              const texto = `¡Mira este *${producto.nombre}* en *Kaori Store*! 🚀\n\n${url}`;
+
+              // Codificamos el texto para URL
+              const waUrl = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+
+              // Intentamos usar el compartir nativo (que es lo más Pro en móviles)
+              if (navigator.share) {
+                navigator
+                  .share({
+                    title: "Kaori Store",
+                    text: `¡Mira este ${producto.nombre}! ‼️`,
+                    url: url,
+                  })
+                  .catch(() => {
+                    // Si falla o el usuario cancela, abrimos WhatsApp como fallback
+                    window.open(waUrl, "_blank");
+                  });
+              } else {
+                // Si el navegador no soporta share (escritorio), directo a WhatsApp Web
+                window.open(waUrl, "_blank");
+              }
+            }}
+            className="w-12 h-12 flex items-center justify-center bg-orange-100 text-orange-600 rounded-2xl active:scale-95 hover:bg-orange-200 transition-all shadow-sm"
+            title="Compartir en WhatsApp"
           >
-            💬
+            {/* Nuevo Icono: Estilo "Share" moderno y limpio */}
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
           </button>
         </div>
 
@@ -609,7 +651,8 @@ _Fecha: ${fecha}_`;
                               className="bg-white border-2 border-orange-100 p-6 rounded-[2.5rem] shadow-xl"
                             >
                               <p className="text-[11px] font-black text-[#F97316] uppercase mb-4 px-2 tracking-tighter">
-                                Ingresa tu Ciudad o Pueblo:
+                                Ingresa tu Ciudad o Provincia donde quieres que
+                                lo enviemos:
                               </p>
                               <div className="flex gap-2">
                                 <input
@@ -873,10 +916,12 @@ _Fecha: ${fecha}_`;
         </div>
 
         {/* FOOTER FIJO MEJORADO */}
-        <div className="bg-white/95 backdrop-blur-xl border-t border-orange-100 px-6 py-6 z-[80] flex gap-3 shadow-[0_-20px_40px_rgba(249,115,22,0.1)] rounded-t-[3.5rem] absolute bottom-0 left-0 right-0">
+        {/* FOOTER SIMPLIFICADO - ACCIÓN DIRECTA */}
+        {/* FOOTER SIMPLIFICADO - ACCIÓN DIRECTA */}
+        <div className="bg-white/95 backdrop-blur-xl border-t border-orange-100 px-5 py-5 z-[80] flex gap-3 items-center shadow-[0_-12px_32px_rgba(249,115,22,0.12)] rounded-t-[2.5rem] absolute bottom-0 left-0 right-0">
+          {/* BOTÓN CARRITO */}
           <button
             type="button"
-            // ─── BLOQUEO TOTAL ───
             disabled={Number(producto.stock) <= 0}
             onClick={() => {
               if (Number(producto.stock) <= 0) return;
@@ -884,43 +929,38 @@ _Fecha: ${fecha}_`;
               setAgregado(true);
               setTimeout(() => setAgregado(false), 2000);
             }}
-            // Mantenemos w-18 fijo para que NO crezca
-            className={`relative w-18 h-18 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-lg border-2 ${
+            className={`relative w-[72px] h-[72px] flex-shrink-0 rounded-3xl flex items-center justify-center transition-all duration-300 border-2 ${
               Number(producto.stock) <= 0
-                ? "bg-gray-50 border-gray-100 cursor-not-allowed opacity-60" // Estilo Apagado
+                ? "bg-gray-50 border-gray-200 opacity-50"
                 : agregado
-                  ? "bg-emerald-500 border-emerald-400 shadow-emerald-200"
-                  : "bg-white border-orange-50 shadow-orange-100 hover:border-orange-200"
+                  ? "bg-emerald-500 border-emerald-400"
+                  : "bg-white border-orange-400 hover:bg-orange-50 active:scale-95"
             }`}
           >
             <AnimatePresence mode="wait">
               {Number(producto.stock) <= 0 ? (
-                // ─── ÍCONO DE "NO DISPONIBLE" (Mantiene el tamaño) ───
                 <motion.div
                   key="no-stock"
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="flex flex-col items-center justify-center gap-0.5"
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  className="flex flex-col items-center"
                 >
-                  <span className="text-red-500 text-xl font-black leading-none">
-                    ✕
-                  </span>
-                  <span className="text-[7px] font-[1000] text-gray-400 uppercase leading-none">
+                  <span className="text-red-400 text-lg font-black">✕</span>
+                  <span className="text-[7px] font-bold text-gray-400 uppercase">
                     Agotado
                   </span>
                 </motion.div>
               ) : agregado ? (
                 <motion.div
                   key="success"
-                  initial={{ scale: 0, rotate: -45 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0 }}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
                 >
                   <svg
-                    className="w-8 h-8 text-white"
+                    className="w-7 h-7 text-white"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="4"
+                    strokeWidth="3.5"
                     viewBox="0 0 24 24"
                   >
                     <path
@@ -933,155 +973,92 @@ _Fecha: ${fecha}_`;
               ) : (
                 <motion.div
                   key="cart-icon"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="relative"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                 >
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png"
-                    className="w-8 h-8 opacity-70 grayscale-[0.2]"
-                    alt="Cart"
-                  />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#F97316] rounded-full border-2 border-white animate-pulse"></span>
+                  <svg
+                    className="w-7 h-7 text-orange-500"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                  </svg>
                 </motion.div>
               )}
             </AnimatePresence>
           </button>
+
+          {/* BOTÓN COMPRAR — EL PROTAGONISTA */}
           <button
             disabled={producto.stock <= 0}
-            onClick={() => {
-              if (!ubicacion) {
-                setActiveTab("envío");
-                setTimeout(() => {
-                  gpsRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                }, 100);
-              } else {
-                enviarWhatsApp("compra");
-              }
-            }}
-            className={`w-full flex items-center gap-4 rounded-[20px] px-4 py-3.5 transition-all duration-300 active:scale-[0.97] ${
+            onClick={() => setMostrandoPago(true)}
+            className={`relative flex-1 h-[72px] overflow-hidden flex items-center justify-between px-5 rounded-[28px] transition-all duration-200 active:scale-[0.97] ${
               producto.stock <= 0
-                ? "bg-gray-100 border-[1.5px] border-gray-200 cursor-not-allowed"
-                : ubicacion
-                  ? "bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/40"
-                  : "bg-[#FF6B00] shadow-lg shadow-orange-600/35"
+                ? "bg-gray-100 border border-gray-200 text-gray-400"
+                : "bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_0_0_0_rgba(249,115,22,0.4)] animate-[pulse-ring_2.5s_ease-out_infinite]"
             }`}
           >
-            {/* Ícono izquierdo */}
+            {/* Shimmer */}
+            {producto.stock > 0 && (
+              <span className="absolute inset-0 -skew-x-12 w-1/3 bg-white/20 animate-[shimmer_3s_ease-in-out_infinite] pointer-events-none" />
+            )}
+
+            <div className="flex flex-col items-start text-left relative z-10">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/75 leading-none">
+                {producto.stock <= 0 ? "Sin stock" : "vamos!"}
+              </span>
+              <span
+                className={`text-[19px] font-black leading-snug mt-0.5 tracking-tight ${producto.stock <= 0 ? "text-gray-400" : "text-white"}`}
+              >
+                {producto.stock <= 0 ? "Agotado" : "Comprar ahora"}
+              </span>
+            </div>
+
             <div
-              className={`w-[48px] h-[48px] rounded-[14px] flex items-center justify-center flex-shrink-0 ${
-                producto.stock <= 0 ? "bg-gray-200" : "bg-black/[0.18]"
+              className={`relative z-10 w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
+                producto.stock <= 0
+                  ? "bg-gray-200"
+                  : "bg-white/20 border-2 border-white/50"
               }`}
             >
-              {producto.stock <= 0 ? (
-                <span className="text-xl">⏳</span>
-              ) : ubicacion ? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-              ) : (
-                <svg
-                  width="22"
-                  height="22"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.806H14.25M16.5 18.75h-2.25m0-11.25v-1.125c0-.621-.504-1.125-1.125-1.125h-2.25a1.125 1.125 0 00-1.125 1.125V7.5m4.5 0h-4.5m4.5 0v6.75M9 7.5v6.75m0 0h7.5"
-                  />
-                </svg>
-              )}
-            </div>
-
-            {/* Texto central */}
-            <div className="flex flex-col items-start flex-1 min-w-0">
-              {/* Badge superior */}
-              {producto.stock > 0 && (
-                <span
-                  className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mb-1.5 ${
-                    ubicacion
-                      ? "bg-white/20 text-white"
-                      : "bg-black/15 text-white/90"
-                  }`}
-                >
-                  {ubicacion ? "Todo listo" : "Paso 1"}
-                </span>
-              )}
-
-              <span
-                className={`text-[15px] font-[900] uppercase italic tracking-tight leading-none ${
-                  producto.stock <= 0 ? "text-gray-400" : "text-white"
-                }`}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={producto.stock <= 0 ? "#9ca3af" : "white"}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                {producto.stock <= 0
-                  ? "Artículo agotado"
-                  : ubicacion
-                    ? "¡Vamos a pagarlo!"
-                    : "Compralo ahora"}
-              </span>
-
-              <span
-                className={`text-[10px] font-bold uppercase mt-1.5 tracking-widest ${
-                  producto.stock <= 0 ? "text-gray-300" : "text-white/75"
-                }`}
-              >
-                {producto.stock <= 0
-                  ? "No disponible por el momento"
-                  : ubicacion
-                    ? "Toca para comprar por WhatsApp"
-                    : "Ingresa tu dirección primero"}
-              </span>
-            </div>
-
-            {/* Ícono derecho */}
-            <div className="flex-shrink-0">
-              {producto.stock <= 0 ? (
-                <span className="text-gray-300 text-lg">⌛</span>
-              ) : ubicacion ? (
-                <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center animate-pulse">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 12.75l6 6 9-13.5"
-                    />
-                  </svg>
-                </div>
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-black/15 flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
-                    />
-                  </svg>
-                </div>
-              )}
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
             </div>
           </button>
         </div>
       </motion.div>
-
+      <AnimatePresence>
+        {mostrandoPago && (
+          <SimuladorPago
+            total={producto.precio * cantidad}
+            onClose={() => setMostrandoPago(false)}
+            regionNombre={regionNombre}
+            productoNombre={producto.nombre}
+            cantidad={cantidad}
+            ubicacionGps={ubicacion}
+            precioUnitario={producto.precio}
+            carrito={[]} // <--- AÑADE ESTO (Como es compra directa de un producto, mandamos un array vacío o el producto actual)
+            onPedidoConfirmado={() => {}} // <--- AÑADE ESTO TAMBIÉN
+          />
+        )}
+      </AnimatePresence>
       {/* MODAL ZOOM */}
       <AnimatePresence>
         {showImageModal && (

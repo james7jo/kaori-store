@@ -201,9 +201,9 @@ export default function TerminosPage() {
                     Pasadas las **72 horas** desde que el sistema de tracking
                     confirme la llegada del producto a su destino, si el cliente
                     no ha recogido el paquete, se procederá a la **DEVOLUCIÓN
-                    AUTOMÁTICA** del producto a nuestro origen. En este caso,
-                    **NO SE REALIZARÁ NINGÚN REEMBOLSO** ni devoluciones de
-                    dinero.
+                    AUTOMÁTICA** del producto a nuestro origen. Para proteger
+                    los productos de posible mal manipuleo de alguna empresa
+                    transportista.
                   </p>
                 </div>
               </li>

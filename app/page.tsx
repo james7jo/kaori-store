@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { TiendaClient } from "./TiendaClient";
+import { TiendaClient } from "./TiendaClient"; // Asegúrate que el nombre coincida
 
 export default function Page() {
   return (
