@@ -17,6 +17,7 @@ import { useSearchParams } from "next/navigation";
 // Acento Secundario/Hover: #EA580C (Naranja más oscuro para interacciones)
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
 // ─── COMPONENTE PARA LAS FILAS HORIZONTALES ───
 import { useRef } from "react";
 
