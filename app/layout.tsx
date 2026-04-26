@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   publisher: "Kaori Store",
 
   icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    apple: [{ url: "/icon.png" }],
   },
 
   formatDetection: {
