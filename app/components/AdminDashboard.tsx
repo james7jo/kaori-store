@@ -71,8 +71,6 @@ const OPCIONES_ESTADO = [
   { id: "usado", label: "♻️ Usado " },
 ];
 
-const ITEMS_POR_PAGINA = 10;
-
 // ─────────────────────────────────────────────
 // STAT CARD
 // ─────────────────────────────────────────────
@@ -233,6 +231,9 @@ const inputCls =
 // PÁGINA PRINCIPAL DASHBOARD
 // ─────────────────────────────────────────────
 export default function AdminDashboardKaori() {
+  const [busqueda, setBusqueda] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const ITEMS_POR_PAGINA = 10;
   const [subiendoGaleria, setSubiendoGaleria] = useState(false);
   const handleSubirGaleria = async (archivos: File[]) => {
     setSubiendoGaleria(true);
@@ -293,7 +294,6 @@ export default function AdminDashboardKaori() {
   const [idEditando, setIdEditando] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(FORM_VACIO);
   const [subiendo, setSubiendo] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("Todo");
   const [seccion, setSeccion] = useState<"inventario" | "agregar">(
     "inventario",
@@ -303,6 +303,14 @@ export default function AdminDashboardKaori() {
     cargarInventario();
     cargarMetricasGlobales();
   }, [paginaActual, filtroCategoria]);
+  useEffect(() => {
+    setBuscando(true);
+    setPaginaActual(0);
+    const timeout = setTimeout(() => {
+      cargarInventario();
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [busqueda]);
 
   async function cargarMetricasGlobales() {
     const { data, error } = await supabase
@@ -329,6 +337,11 @@ export default function AdminDashboardKaori() {
       consulta = consulta.eq("categoria", filtroCategoria);
     }
 
+    // 👇 Búsqueda real en Supabase — busca en TODOS los productos, no solo los 10 cargados
+    if (busqueda.trim() !== "") {
+      consulta = consulta.ilike("nombre", `%${busqueda.trim()}%`);
+    }
+
     const { data, count, error } = await consulta
       .order("id", { ascending: false })
       .range(desde, hasta);
@@ -336,6 +349,7 @@ export default function AdminDashboardKaori() {
     if (!error) {
       setProductos(data || []);
       setTotalItems(count || 0);
+      setBuscando(false);
     }
   }
 
