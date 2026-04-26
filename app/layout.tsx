@@ -52,16 +52,17 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "Kaori Store",
-    description: "¡Envíos a toda Bolivia desde Cochabamba!",
+    title: "Kaori Store | Tecnología y Novedades",
+    description:
+      "⚡ Envíos a toda Bolivia. ¡Lo mejor en tecnología, hogar y más!",
     url: "https://kaoristore.shop",
     siteName: "Kaori Store",
     images: [
       {
-        url: "/icon.png",
+        url: "https://kaoristore.shop/icon.png", // <--- USA URL COMPLETA
         width: 1200,
         height: 630,
-        alt: "Kaori Store Logo",
+        alt: "Kaori Store Bolivia",
       },
     ],
     locale: "es_BO",

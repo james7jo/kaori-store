@@ -221,12 +221,28 @@ export default function TarjetaProducto({
   const imageBadge = getImageBadge(producto);
 
   // Carrusel automático — solo si hay más de una foto y hay stock
+  // ✅ DESPUÉS — cada tarjeta tiene su propio ritmo aleatorio
   useEffect(() => {
     if (todasLasFotos.length <= 1 || isAgotado) return;
-    const intervalo = setInterval(() => {
-      setIndexImagen((prev) => (prev + 1) % todasLasFotos.length);
-    }, 3000);
-    return () => clearInterval(intervalo);
+
+    // Delay inicial aleatorio: entre 0 y 3 segundos antes de empezar
+    const delayInicial = Math.random() * 3000;
+
+    // Intervalo aleatorio: entre 2.5 y 5 segundos por tarjeta
+    const intervaloMs = 2500 + Math.random() * 2500;
+
+    let intervalo: ReturnType<typeof setInterval>;
+
+    const timeout = setTimeout(() => {
+      intervalo = setInterval(() => {
+        setIndexImagen((prev) => (prev + 1) % todasLasFotos.length);
+      }, intervaloMs);
+    }, delayInicial);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(intervalo);
+    };
   }, [todasLasFotos.length, isAgotado]);
 
   // Leer consultas guardadas en localStorage
