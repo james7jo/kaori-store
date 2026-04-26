@@ -19,7 +19,7 @@ export async function generateMetadata(props: {
   if (productoId && typeof productoId === "string") {
     const { data: producto } = await supabase
       .from("productos")
-      .select("nombre, imagen_url, precio")
+      .select("nombre, imagen, precio")
       .eq("id", productoId)
       .single();
 
@@ -31,7 +31,7 @@ export async function generateMetadata(props: {
           title: producto.nombre,
           description: `Oferta exclusiva: ${producto.nombre}`,
           url: `https://kaoristore.shop/?p=${productoId}`,
-          images: [{ url: producto.imagen_url, width: 800, height: 800 }],
+          images: [{ url: producto.imagen, width: 800, height: 800 }],
         },
       };
     }
