@@ -675,34 +675,6 @@ export function TiendaClient() {
           >
             ☰
           </button>
-          <button
-            onClick={() => setCartOpen(true)}
-            className="relative w-12 h-12 bg-white rounded-2xl border border-orange-100 text-[#1F2937] shadow-[0_4px_12px_rgba(249,115,22,0.08)] flex items-center justify-center active:scale-90 transition-all duration-300 group hover:border-orange-300"
-          >
-            {/* Icono con ligero movimiento al pasar el mouse */}
-            <span className="text-xl group-hover:rotate-12 transition-transform duration-300">
-              🛒
-            </span>
-
-            {/* Badge de cantidad (El punto rojo) mejorado */}
-            <AnimatePresence>
-              {carrito.length > 0 && (
-                <motion.span
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  className="absolute -top-1.5 -right-1.5 bg-[#F97316] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-md shadow-orange-200"
-                >
-                  {carrito.length}
-                </motion.span>
-              )}
-            </AnimatePresence>
-
-            {/* Efecto de brillo sutil en el borde cuando hay productos */}
-            {carrito.length > 0 && (
-              <span className="absolute inset-0 rounded-2xl border-2 border-orange-400/20 animate-pulse pointer-events-none" />
-            )}
-          </button>
         </div>
       </div>
 
@@ -927,9 +899,6 @@ export function TiendaClient() {
                 key={p.id}
                 producto={p}
                 onClick={() => abrirProducto(p)}
-                ubicacion={ubicacion}
-                regionNombre={regionNombre}
-                vincularGps={vincularGps}
               />
             ))}
           </div>

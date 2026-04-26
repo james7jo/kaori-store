@@ -972,7 +972,10 @@ export default function SimuladorPago({
 
                   // Mostrar mensaje y luego cerrar
                   setMostrarGracias(true);
-                  setTimeout(() => onClose(), 3200);
+                  setTimeout(() => {
+                    onPedidoConfirmado();
+                    onClose();
+                  }, 3200);
                 }}
                 className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-[900] uppercase tracking-tight text-[15px] transition-all active:scale-[0.98] shadow-lg shadow-emerald-200"
               >

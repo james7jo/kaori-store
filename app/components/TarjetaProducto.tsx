@@ -1,204 +1,327 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-// Función para saber si un producto se subió hace menos de 24 horas
-const esProductoNuevo = (fechaIso: string) => {
+// ─────────────────────────────────────────────
+// TIPOS
+// ─────────────────────────────────────────────
+interface Producto {
+  id: string | number;
+  nombre: string;
+  precio: number | string;
+  descuento?: string | null;
+  stock: number | string;
+  stockInicial?: number | string;
+  vendidos?: number | string;
+  imagen: string;
+  galeria?: string;
+  created_at?: string;
+  consultas?: number;
+}
+
+interface TarjetaProductoProps {
+  producto: Producto;
+  onClick: () => void;
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+const esProductoNuevo = (fechaIso?: string): boolean => {
   if (!fechaIso) return false;
-  const fechaCreacion = new Date(fechaIso).getTime();
-  const ahora = new Date().getTime();
-  const unDiaEnMilisegundos = 24 * 60 * 60 * 1000; // 24 horas
-  return ahora - fechaCreacion < unDiaEnMilisegundos;
+  const creacion = new Date(fechaIso).getTime();
+  const ahora = Date.now();
+  return ahora - creacion < 24 * 60 * 60 * 1000;
 };
 
-// ⭐ Rating - AHORA EN NARANJA
-// ⭐ Rating - AHORA INDEPENDIENTE POR PRODUCTO
-function StarRating({ producto }: { producto: any }) {
-  // 1. Usamos los valores reales que vienen de Supabase/Base de datos para ESTE producto
-  // Si no existen, usamos 0 para no romper el código
-  const stockActual = Number(producto.stock) || 0;
-  const vendidosReal = Number(producto.vendidos) || 0;
+const calcularVendidos = (producto: Producto): number => {
+  // Prioridad 1: campo "vendidos" real de la base de datos
+  const vendidosDB = Number(producto.vendidos);
+  if (!isNaN(vendidosDB) && vendidosDB > 0) return vendidosDB;
 
-  // 2. Calculamos las estrellas (1 por cada 5 ventas del producto específico)
-  // Sumamos 1 de base para que no se vea vacío
-  const estrellasCalculadas = Math.floor(vendidosReal / 5) + 1;
+  // Prioridad 2: diferencia stockInicial - stockActual
+  const inicial = Number(producto.stockInicial);
+  const actual = Number(producto.stock);
+  if (!isNaN(inicial) && !isNaN(actual)) return Math.max(0, inicial - actual);
 
-  // 3. El score final (Máximo 5)
-  const scoreFinal = Math.min(estrellasCalculadas, 5);
+  return 0;
+};
 
+const calcularStars = (vendidos: number): number =>
+  Math.min(5, Math.max(1, Math.floor(vendidos / 5) + 1));
+
+const calcularPctStock = (stock: number, stockInicial: number): number => {
+  if (!stockInicial) return 100;
+  return Math.round((stock / stockInicial) * 100);
+};
+
+// ─────────────────────────────────────────────
+// BADGE DINÁMICO — nunca muestra algo fijo
+// Prioridad: descuento > nuevo > top ventas > pocas unidades > envío gratis
+// ─────────────────────────────────────────────
+type BadgeStyle = { text: string; className: string };
+
+const getDynamicBadge = (producto: Producto, vendidos: number): BadgeStyle => {
+  const stock = Number(producto.stock);
+
+  if (producto.descuento && producto.descuento !== "") {
+    return {
+      text: `-${producto.descuento}`,
+      className: "bg-red-50 border-red-200 text-red-700",
+    };
+  }
+
+  if (esProductoNuevo(producto.created_at) && vendidos < 5) {
+    return {
+      text: "Recién llegado",
+      className: "bg-blue-50 border-blue-200 text-blue-700",
+    };
+  }
+
+  if (vendidos >= 20) {
+    return {
+      text: "Top ventas",
+      className: "bg-orange-50 border-orange-200 text-orange-700",
+    };
+  }
+
+  if (stock > 0 && stock <= 5) {
+    return {
+      text: "Últimas",
+      className: "bg-amber-50 border-amber-200 text-amber-700",
+    };
+  }
+
+  return {
+    text: "Disponible",
+    className: "bg-green-50 border-green-200 text-green-700",
+  };
+};
+
+// Badge pequeño en la esquina de la imagen (solo si aplica)
+const getImageBadge = (
+  producto: Producto,
+): { text: string; className: string } | null => {
+  if (producto.descuento && producto.descuento !== "") {
+    return {
+      text: `-${producto.descuento}`,
+      className: "bg-[#EA580C] text-white",
+    };
+  }
+  if (esProductoNuevo(producto.created_at)) {
+    return { text: "Nuevo", className: "bg-blue-600 text-white" };
+  }
+  return null;
+};
+
+// ─────────────────────────────────────────────
+// SUBCOMPONENTE: Estrellas
+// ─────────────────────────────────────────────
+function StarRating({ stars }: { stars: number }) {
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex gap-[2px]">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <span
-            key={i}
-            className={`text-[10px] ${
-              i <= scoreFinal ? "text-[#F97316]" : "text-gray-300"
-            }`}
-          >
-            ★
-          </span>
-        ))}
-      </div>
-
-      {/* Muestra los vendidos reales de este producto específico */}
-      <p className="text-[8px] font-black text-gray-400 italic uppercase">
-        {vendidosReal > 0 ? `${vendidosReal} vendidos` : "Nuevo"}
-      </p>
-      <p className="text-[8px] font-black text-gray-400 italic uppercase">
-        {vendidosReal > 0
-          ? `${vendidosReal} vendidos`
-          : esProductoNuevo(producto.created_at)
-            ? "Nuevo"
-            : ""}
-      </p>
+    <div className="flex gap-[2px]">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          className={`text-[11px] leading-none ${
+            i <= stars ? "text-[#F97316]" : "text-gray-200"
+          }`}
+        >
+          ★
+        </span>
+      ))}
     </div>
   );
 }
 
-export default function TarjetaProducto({ producto, onClick }: any) {
-  const [loaded, setLoaded] = useState(false);
-  const [indexImagen, setIndexImagen] = useState(0); // Para controlar qué foto se ve
+// ─────────────────────────────────────────────
+// SUBCOMPONENTE: Barra de Stock
+// Reemplaza el espacio vacío con info útil y visual
+// ─────────────────────────────────────────────
+function StockBar({
+  stock,
+  stockInicial,
+  vendidos,
+}: {
+  stock: number;
+  stockInicial: number;
+  vendidos: number;
+}) {
+  const pct = calcularPctStock(stock, stockInicial);
 
-  // 1. Creamos el array de todas las fotos disponibles
-  const todasLasFotos = [
+  // Color de la barra según stock restante
+  const barColor =
+    pct > 50 ? "bg-emerald-400" : pct > 20 ? "bg-amber-400" : "bg-red-400";
+
+  if (stock <= 0) {
+    return (
+      <p className="text-[10px] font-medium text-gray-400 italic">
+        {vendidos > 0 ? `${vendidos} vendidos` : "Sin stock"}
+      </p>
+    );
+  }
+
+  if (!stockInicial) {
+    // Sin stockInicial, mostramos solo vendidos
+    return (
+      <p className="text-[10px] font-medium text-gray-400">
+        {vendidos > 0 ? `${vendidos} vendidos` : "Comprar"}
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-[3px] w-[80px]">
+      <p className="text-[9px] font-medium text-gray-400 uppercase tracking-wide">
+        Stock {pct}%
+      </p>
+      <div className="h-[3px] w-full bg-gray-100 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className={`h-full rounded-full ${barColor}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// COMPONENTE PRINCIPAL
+// ─────────────────────────────────────────────
+export default function TarjetaProducto({
+  producto,
+  onClick,
+}: TarjetaProductoProps) {
+  const [loaded, setLoaded] = useState(false);
+  const [indexImagen, setIndexImagen] = useState(0);
+  const [consultas, setConsultas] = useState(producto.consultas || 0);
+
+  // Array de todas las fotos disponibles
+  const todasLasFotos: string[] = [
     producto.imagen,
     ...(producto.galeria
-      ? producto.galeria.split(",").filter((img: string) => img !== "")
+      ? producto.galeria
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : []),
   ];
 
-  // 2. Efecto para rotar las imágenes automáticamente cada 3 segundos
-  useEffect(() => {
-    // Solo rotamos si hay más de una foto y el producto NO está agotado
-    if (todasLasFotos.length <= 1 || Number(producto.stock) <= 0) return;
+  const stockActual = Number(producto.stock) || 0;
+  const stockInicial = Number(producto.stockInicial) || 0;
+  const vendidos = calcularVendidos(producto);
+  const stars = calcularStars(vendidos);
+  const tieneDescuento = !!producto.descuento && producto.descuento !== "";
+  const isAgotado = stockActual <= 0;
+  const isPocas = stockActual > 0 && stockActual <= 5;
 
+  const dynamicBadge = getDynamicBadge(producto, vendidos);
+  const imageBadge = getImageBadge(producto);
+
+  // Carrusel automático — solo si hay más de una foto y hay stock
+  useEffect(() => {
+    if (todasLasFotos.length <= 1 || isAgotado) return;
     const intervalo = setInterval(() => {
       setIndexImagen((prev) => (prev + 1) % todasLasFotos.length);
-    }, 3000); // 3 segundos por foto
-
+    }, 3000);
     return () => clearInterval(intervalo);
-  }, [todasLasFotos.length, producto.stock]);
+  }, [todasLasFotos.length, isAgotado]);
 
-  // ... resto de tus constantes (consultas, vendidos, etc)
-  const [consultas, setConsultas] = useState(producto.consultas || 0);
-
-  const vendidosCalculados = Math.max(
-    0,
-    (producto.stockInicial || 0) - (producto.stock || 0),
-  );
-
-  const rating = Math.max(
-    1,
-    Math.min(5, Math.floor(vendidosCalculados / 5) + 1),
-  );
-
-  const tieneDescuento = producto.descuento && producto.descuento !== "";
-
+  // Leer consultas guardadas en localStorage
   useEffect(() => {
     const saved = localStorage.getItem(`consultas_${producto.id}`);
-    if (saved) {
-      setConsultas(parseInt(saved));
-    }
+    if (saved) setConsultas(parseInt(saved, 10));
   }, [producto.id]);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     const nuevas = consultas + 1;
     setConsultas(nuevas);
     localStorage.setItem(`consultas_${producto.id}`, nuevas.toString());
     onClick();
-  };
+  }, [consultas, producto.id, onClick]);
 
-  // 🧠 BADGE INTELIGENTE - COLORES SINCRONIZADOS
-  const getBadge = () => {
-    if (tieneDescuento) {
-      return {
-        text: `-${producto.descuento}`,
-        style: "bg-red-500/10 border-red-500/20 text-red-500",
-      };
-    }
-
-    if (vendidosCalculados < 3 && esProductoNuevo(producto.created_at)) {
-      return {
-        text: "Recién añadido",
-        style: "bg-orange-400/10 border-orange-400/20 text-orange-600",
-      };
-    }
-
-    if (vendidosCalculados < 3) {
-      return {
-        text: "Recién añadido",
-        style: "bg-orange-400/10 border-orange-400/20 text-orange-600",
-      };
-    }
-
-    if (producto.stock > 0 && producto.stock <= 5) {
-      return {
-        text: "⏳ Últimas",
-        style: "bg-amber-500/10 border-amber-500/20 text-amber-600",
-      };
-    }
-
-    return {
-      text: "🚚 Envío Nacional",
-      style: "bg-gray-100 border-gray-200 text-gray-500",
-    };
-  };
-
-  const badge = getBadge();
+  // Precio original (antes del descuento)
+  const precioActual = Number(producto.precio) || 0;
+  const precioOriginal = tieneDescuento
+    ? (() => {
+        const pct = parseFloat(
+          (producto.descuento ?? "").toString().replace("%", ""),
+        );
+        if (isNaN(pct) || pct >= 100) return null;
+        return (precioActual / ((100 - pct) / 100)).toFixed(0);
+      })()
+    : null;
 
   return (
     <motion.div
       onClick={handleClick}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.97 }}
       whileHover={{ y: -4 }}
-      // FONDO BLANCO Y BORDE NARANJA SUAVE
-      className="relative bg-white rounded-2xl overflow-hidden group cursor-pointer border border-[#F97316]/10 shadow-[0_10px_30px_rgba(0,0,0,0.05)]"
+      className="relative bg-white rounded-2xl overflow-hidden group cursor-pointer border border-[#F97316]/10 shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
     >
-      {/* Glow Naranja al pasar el mouse */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#F97316]/5 via-transparent to-transparent pointer-events-none" />
+      {/* Glow sutil al hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-[#F97316]/5 via-transparent to-transparent pointer-events-none z-0" />
 
-      {/* IMAGEN - CARRUSEL AUTOMÁTICO */}
-      <div className="aspect-square relative bg-[#FFF8F1]/30 overflow-hidden">
-        <img
-          src={producto.imagen}
-          loading="lazy"
-          onLoad={() => setLoaded(true)}
-          className={`w-full h-full object-contain p-3 transition-all duration-700 ${
-            loaded ? "opacity-100 scale-100" : "opacity-0"
-          } ${
-            Number(producto.stock) <= 0
-              ? "grayscale opacity-30 brightness-90"
-              : "group-hover:scale-110"
-          }`}
-          alt={producto.nombre}
-        />
-
-        {/* 🔻 DESCUENTO */}
-        {tieneDescuento && (
-          <div className="absolute top-2 left-2 bg-[#EA580C] px-2 py-1 rounded-md shadow-md z-10">
-            <span className="text-[10px] font-bold text-white">
-              -{producto.descuento}
+      {/* ── IMAGEN ── */}
+      <div
+        className={`aspect-square relative bg-[#FFF8F1]/40 overflow-hidden transition-all duration-500 ${isAgotado ? "opacity-40 grayscale" : "opacity-100"}`}
+      >
+        {" "}
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={indexImagen}
+            src={todasLasFotos[indexImagen]}
+            alt={producto.nombre}
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: loaded ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className={`w-full h-full object-contain p-3 transition-transform duration-500 ${
+              isAgotado ? "grayscale opacity-30" : "group-hover:scale-110"
+            }`}
+          />
+        </AnimatePresence>
+        {/* Badge imagen (descuento o nuevo) */}
+        {imageBadge && !isAgotado && (
+          <div
+            className={`absolute top-2 left-2 px-2 py-[3px] rounded-md shadow z-10 ${imageBadge.className}`}
+          >
+            <span className="text-[10px] font-bold">{imageBadge.text}</span>
+          </div>
+        )}
+        {/* Pocas unidades — badge animado */}
+        {isPocas && (
+          <div className="absolute bottom-2 left-2 bg-amber-500 px-2 py-[3px] rounded-md shadow animate-pulse z-10">
+            <span className="text-[10px] font-bold text-white uppercase">
+              {stockActual === 1 ? "Última unidad" : `Quedan ${stockActual}`}
             </span>
           </div>
         )}
-
-        {/* ⚠️ POCAS UNIDADES */}
-        {Number(producto.stock) > 0 && Number(producto.stock) <= 5 && (
-          <div className="absolute bottom-2 left-2 bg-amber-500 px-2 py-1 rounded-md shadow-md animate-pulse z-10">
-            <span className="text-[10px] font-black text-white uppercase">
-              {Number(producto.stock) === 1
-                ? "Última unidad"
-                : `Quedan ${producto.stock}`}
-            </span>
+        {/* Dots del carrusel */}
+        {todasLasFotos.length > 1 && !isAgotado && (
+          <div className="absolute bottom-2 right-2 flex gap-[3px] z-10">
+            {todasLasFotos.map((_, i) => (
+              <span
+                key={i}
+                className={`block rounded-full transition-all duration-300 ${
+                  i === indexImagen
+                    ? "w-3 h-[5px] bg-[#F97316]"
+                    : "w-[5px] h-[5px] bg-gray-300"
+                }`}
+              />
+            ))}
           </div>
         )}
-
-        {/* 🚫 CARTEL DE AGOTADO */}
-        {Number(producto.stock) <= 0 && (
-          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-            <div className="bg-[#1F2937]/90 px-3 py-1.5 rounded-xl shadow-2xl border border-white/10 -rotate-12 backdrop-blur-sm">
-              <span className="text-[9px] font-black text-white uppercase italic tracking-widest">
+        {/* Agotado overlay */}
+        {isAgotado && (
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            {/* Subí el z-index a 30 para que esté por encima de todo */}
+            <div className="bg-red-600/90 px-4 py-2 rounded-xl border border-white/20 -rotate-12 shadow-xl backdrop-blur-md">
+              <span className="text-[11px] font-[1000] text-white uppercase tracking-[0.2em] italic">
                 Agotado
               </span>
             </div>
@@ -206,85 +329,61 @@ export default function TarjetaProducto({ producto, onClick }: any) {
         )}
       </div>
 
-      {/* INFO */}
-      <div className="p-3 flex flex-col gap-2">
-        {/* NOMBRE DEL PRODUCTO - Altura fija para alinear todo */}
-        <h3 className="text-[13px] text-[#1F2937] font-[1000] uppercase line-clamp-2 min-h-[34px] group-hover:text-[#F97316] transition-colors leading-tight">
+      {/* ── INFO ── */}
+      <div className="p-3 flex flex-col gap-2 relative z-10">
+        {/* Nombre — altura fija para alinear tarjetas en grid */}
+        <h3 className="text-[13px] font-semibold text-[#1F2937] uppercase leading-tight line-clamp-2 min-h-[34px] group-hover:text-[#F97316] transition-colors duration-200">
           {producto.nombre}
         </h3>
 
-        {/* CONTENEDOR PRECIO + BADGE - Alineado al fondo con altura constante */}
-        <div className="flex items-end justify-between min-h-[40px] mt-1">
+        {/* Precio + badge dinámico */}
+        <div className="flex items-end justify-between min-h-[42px]">
           <div className="flex flex-col justify-end">
-            {tieneDescuento && (
-              <span className="text-[10px] text-gray-400 line-through leading-none mb-1">
-                Bs{" "}
-                {(() => {
-                  const precioActual = Number(producto.precio) || 0;
-                  const valorPorcentaje = parseFloat(
-                    producto.descuento.toString().replace("%", ""),
-                  );
-                  if (isNaN(valorPorcentaje) || valorPorcentaje >= 100)
-                    return precioActual;
-                  const factor = (100 - valorPorcentaje) / 100;
-                  return (precioActual / factor).toFixed(0);
-                })()}
+            {precioOriginal && (
+              <span className="text-[10px] text-gray-400 line-through leading-none mb-[2px]">
+                Bs {precioOriginal}
               </span>
             )}
-
-            <div className="flex items-end gap-1 leading-none">
-              <span className="text-[#F97316] text-xs font-bold uppercase">
+            <div className="flex items-baseline gap-[3px]">
+              <span className="text-[#F97316] text-[11px] font-bold uppercase">
                 Bs
               </span>
-              <span className="text-[17px] font-[1000] text-[#1F2937]">
-                {Number(producto.precio).toFixed(2)}
+              <span className="text-[19px] font-bold text-[#1F2937] leading-none">
+                {precioActual.toFixed(2)}
               </span>
             </div>
           </div>
 
-          {/* Badge Dinámico en dos pisos (Recién / Añadido) */}
-          {/* Solo mostramos el cuadradito si tiene texto (como el Recién Añadido) */}
-          {badge.text && badge.text !== "🚚 Envío Nacional" && (
-            <div
-              className={`px-2 py-1 rounded-lg border flex items-center justify-center transition-transform group-hover:scale-105 ${badge.style}`}
-            >
-              <span className="text-[8px] font-[1000] uppercase tracking-tighter leading-[1.1] text-center max-w-[45px]">
-                {badge.text}
-              </span>
-            </div>
-          )}
+          {/* Badge dinámico — cambia según el estado del producto */}
+          <div
+            className={`px-2 py-1 rounded-lg border flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${dynamicBadge.className}`}
+          >
+            <span className="text-[8px] font-bold uppercase tracking-tight leading-[1.15] text-center max-w-[52px]">
+              {dynamicBadge.text}
+            </span>
+          </div>
         </div>
 
-        {/* RATING + DATOS */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 bg-gray-50 px-2 py-[2px] rounded-md border border-gray-100">
-            <StarRating producto={producto} />
-            <span className="text-[10px] text-gray-500 font-bold">
-              {rating}.0
+        {/* Estrellas + barra de stock */}
+        <div className="flex items-center justify-between pt-[2px]">
+          <div className="flex items-center gap-1 bg-gray-50 px-2 py-[3px] rounded-md border border-gray-100">
+            <StarRating stars={stars} />
+            <span className="text-[10px] text-gray-500 font-medium">
+              {stars}.0
             </span>
           </div>
 
-          {/* CONSULTAS + VENDIDOS */}
-          <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
-            <span className="group-hover:text-[#F97316] transition">
-              💬 {consultas}
-            </span>
-            <span>•</span>
-            <span
-              className={`text-[10px] uppercase italic tracking-tighter ${
-                producto.vendidos > 0
-                  ? "text-[#F97316] font-[1000] drop-shadow-[0_0_5px_rgba(249,115,22,0.2)]"
-                  : "text-gray-400 font-bold"
-              }`}
-            >
-              🛒 {producto.vendidos > 0 ? `${producto.vendidos}` : "Nuevo"}
-            </span>
-          </div>
+          {/* Barra de stock — rellena el espacio vacío con info real */}
+          <StockBar
+            stock={stockActual}
+            stockInicial={stockInicial}
+            vendidos={vendidos}
+          />
         </div>
       </div>
 
-      {/* BORDE DE ENFOQUE AL HOVER */}
-      <div className="absolute inset-0 rounded-2xl border-2 border-[#F97316]/0 group-hover:border-[#F97316]/10 transition pointer-events-none" />
+      {/* Borde naranja al hover */}
+      <div className="absolute inset-0 rounded-2xl border-2 border-[#F97316]/0 group-hover:border-[#F97316]/15 transition-all duration-300 pointer-events-none z-20" />
     </motion.div>
   );
 }
