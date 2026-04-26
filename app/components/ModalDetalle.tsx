@@ -1010,13 +1010,21 @@ _Fecha: ${fecha}_`;
             )}
 
             <div className="flex flex-col items-start text-left relative z-10">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/75 leading-none">
-                {producto.stock <= 0 ? "Sin stock" : "vamos!"}
+              <span
+                className={`text-[10px] font-black uppercase tracking-[0.15em] leading-none ${
+                  producto.stock <= 0 ? "text-gray-400" : "text-black"
+                }`}
+              >
+                {producto.stock <= 0 ? "Sin stock" : "Compra Directa"}
               </span>
               <span
-                className={`text-[19px] font-black leading-snug mt-0.5 tracking-tight ${producto.stock <= 0 ? "text-gray-400" : "text-white"}`}
+                className={`text-[19px] font-black leading-snug mt-0.5 tracking-tight uppercase ${
+                  producto.stock <= 0 ? "text-gray-400" : "text-black"
+                }`}
               >
-                {producto.stock <= 0 ? "Agotado" : "Comprar ahora"}
+                {producto.stock <= 0
+                  ? "Agotado"
+                  : `COMPRAR ${producto.nombre.split(" ").slice(0, 2).join(" ")}`}
               </span>
             </div>
 
