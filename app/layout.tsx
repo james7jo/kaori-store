@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 
 // --- CONFIGURACIÓN DE GOOGLE Y REDES SOCIALES ---
 export const metadata: Metadata = {
+  metadataBase: new URL("https://kaoristore.shop"),
   title: {
     default: "Kaori Store | Tecnología, Pet Shop y Outlet",
     template: "%s | Kaori Store",
@@ -59,9 +60,9 @@ export const metadata: Metadata = {
     siteName: "Kaori Store",
     images: [
       {
-        url: "https://kaoristore.shop/icon.png", // <--- USA URL COMPLETA
-        width: 1200,
-        height: 630,
+        url: "https://kaoristore.shop/icon.png",
+        width: 512,
+        height: 512,
         alt: "Kaori Store Bolivia",
       },
     ],
