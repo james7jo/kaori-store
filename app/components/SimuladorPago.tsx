@@ -198,9 +198,6 @@ export default function SimuladorPago({
         lng: coordenadas?.lng ?? null,
         imagen_url: imagenUrl,
         estado: "pendiente",
-        fecha: new Date().toLocaleString("es-BO", {
-          timeZone: "America/La_Paz",
-        }),
       });
 
       // ← LOGUEÁ el error pero NO pares el flujo
