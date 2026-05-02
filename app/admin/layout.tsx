@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const ADMIN_PASSWORD = "kaoristore1@23#";
 const MAX_INTENTOS = 4;
 const BLOQUEO_SEG = 30;
-const INACTIVIDAD_MS = 3 * 60 * 1000; // 3 minutos
+const INACTIVIDAD_MS = 3 * 60 * 1000;
 
 export default function AdminLayout({
   children,
