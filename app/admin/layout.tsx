@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ADMIN_PASSWORD = "kaoristore1@23#";
-const MAX_INTENTOS = 4;
+const MAX_INTENTOS = 4; //prueba
 const BLOQUEO_SEG = 30;
 const INACTIVIDAD_MS = 3 * 60 * 1000;
 
