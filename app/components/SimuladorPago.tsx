@@ -185,8 +185,9 @@ export default function SimuladorPago({
     setErrorSubida("");
     try {
       const imagenUrl = await subirACloudinary(archivo);
-      // En confirmarPago(), después de subirACloudinary(), agregá esto:
-      await supabase.from("pedidos").insert({
+
+      // ← CAPTURÁ el error del insert
+      const { error: errorInsert } = await supabase.from("pedidos").insert({
         nombre,
         celular,
         producto: productoNombre,
@@ -201,6 +202,17 @@ export default function SimuladorPago({
           timeZone: "America/La_Paz",
         }),
       });
+
+      // ← LOGUEÁ el error pero NO pares el flujo
+      if (errorInsert) {
+        console.error(
+          "❌ Supabase insert falló:",
+          errorInsert.message,
+          errorInsert.details,
+        );
+      } else {
+        console.log("✅ Pedido guardado en Supabase");
+      }
 
       localStorage.setItem("kaori_nombre", nombre);
       localStorage.setItem("kaori_celular", celular);
