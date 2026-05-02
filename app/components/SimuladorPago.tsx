@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { supabase } from "@/lib/supabase";
 // ─── CONFIGURACIÓN — cambia estos 4 valores ──────────────────────────────────
 const WHATSAPP_1 = "59174244882";
 const WHATSAPP_2 = "59169956510";
@@ -35,8 +35,8 @@ interface Props {
   onClose: () => void;
   regionNombre: string;
   ubicacionGps: string;
-  carrito: CarritoItem[]; // ← todo el carrito
-  onPedidoConfirmado: () => void; // ← para vaciar carrito al final
+  carrito: CarritoItem[];
+  onPedidoConfirmado: () => void;
 }
 
 interface PedidoGuardado {
@@ -185,6 +185,22 @@ export default function SimuladorPago({
     setErrorSubida("");
     try {
       const imagenUrl = await subirACloudinary(archivo);
+      // En confirmarPago(), después de subirACloudinary(), agregá esto:
+      await supabase.from("pedidos").insert({
+        nombre,
+        celular,
+        producto: productoNombre,
+        cantidad,
+        total,
+        region: ubicacionTexto,
+        lat: coordenadas?.lat ?? null,
+        lng: coordenadas?.lng ?? null,
+        imagen_url: imagenUrl,
+        estado: "pendiente",
+        fecha: new Date().toLocaleString("es-BO", {
+          timeZone: "America/La_Paz",
+        }),
+      });
 
       localStorage.setItem("kaori_nombre", nombre);
       localStorage.setItem("kaori_celular", celular);

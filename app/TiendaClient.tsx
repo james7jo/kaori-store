@@ -432,7 +432,6 @@ export function TiendaClient() {
   const digitalRandom = getAleatorios("Digital");
   const outletRandom = getAleatorios("Outlet");
   // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ─── // NO QUITAR
-  // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ACTUALIZADO ───
   const abrirProducto = (p: any) => {
     setSel(p);
 

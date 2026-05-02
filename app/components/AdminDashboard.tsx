@@ -288,8 +288,8 @@ export default function AdminDashboardKaori() {
   const [paginaActual, setPaginaActual] = useState(0);
   const [statsTotales, setStatsTotales] = useState({
     dinero: 0,
-    consultas: 0,
     descuentos: 0,
+    pendientes: 0,
   });
   const [idEditando, setIdEditando] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(FORM_VACIO);
@@ -299,10 +299,24 @@ export default function AdminDashboardKaori() {
     "inventario",
   );
 
-  useEffect(() => {
-    cargarInventario();
-    cargarMetricasGlobales();
-  }, [paginaActual, filtroCategoria]);
+  async function cargarMetricasGlobales() {
+    const [productosRes, pedidosRes] = await Promise.all([
+      supabase.from("productos").select("precio, descuento"),
+      supabase
+        .from("pedidos")
+        .select("*", { count: "exact", head: true })
+        .eq("estado", "pendiente"),
+    ]);
+
+    const data = productosRes.data ?? [];
+    const pendientes = pedidosRes.count ?? 0;
+
+    const dinero = data.reduce((acc, p) => acc + Number(p.precio), 0);
+    const descuentos = data.filter(
+      (p) => p.descuento && p.descuento !== "",
+    ).length;
+    setStatsTotales({ dinero, descuentos, pendientes });
+  }
   useEffect(() => {
     setBuscando(true);
     setPaginaActual(0);
@@ -311,21 +325,6 @@ export default function AdminDashboardKaori() {
     }, 400);
     return () => clearTimeout(timeout);
   }, [busqueda]);
-
-  async function cargarMetricasGlobales() {
-    const { data, error } = await supabase
-      .from("productos")
-      .select("precio, descuento, consultas");
-
-    if (!error && data) {
-      const dinero = data.reduce((acc, p) => acc + Number(p.precio), 0);
-      const consultas = data.reduce((acc, p) => acc + (p.consultas ?? 0), 0);
-      const descuentos = data.filter(
-        (p) => p.descuento && p.descuento !== "",
-      ).length;
-      setStatsTotales({ dinero, consultas, descuentos });
-    }
-  }
 
   async function cargarInventario() {
     const desde = paginaActual * ITEMS_POR_PAGINA;
@@ -495,51 +494,6 @@ export default function AdminDashboardKaori() {
 
   return (
     <div className="min-h-screen bg-[#080808] text-white font-sans">
-      <header className="sticky top-0 z-40 bg-[#080808]/95 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-red-700 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-black text-xs">K</span>
-            </div>
-            <div>
-              <span className="font-black italic tracking-tighter bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent text-lg uppercase">
-                Kaori
-              </span>
-              <span className="text-[10px] text-gray-600 font-bold tracking-widest ml-1.5 uppercase hidden sm:inline">
-                Admin
-              </span>
-            </div>
-          </div>
-          <nav className="flex items-center gap-1">
-            <button
-              onClick={cancelarEdicion}
-              className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${seccion === "inventario" ? "bg-white/10 text-white" : "text-gray-600"}`}
-            >
-              Inventario
-            </button>
-            <button
-              onClick={() => setSeccion("agregar")}
-              className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all duration-300 flex items-center gap-1.5 shadow-md ${
-                seccion === "agregar"
-                  ? "bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white shadow-[0_0_15px_rgba(249,115,22,0.4)] scale-105"
-                  : "bg-[#1A1A1A] text-[#F97316] border border-[#F97316]/30 hover:bg-[#F97316]/10"
-              }`}
-            >
-              <span className="text-xs">{idEditando ? "✏️" : "✨"}</span>
-              <span className="whitespace-nowrap">
-                {idEditando ? "Editar" : "Agregar"}
-              </span>
-            </button>
-          </nav>
-          <Link
-            href="/"
-            className="px-4 py-2 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
-          >
-            Ir a la pagina
-          </Link>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto px-5 py-8 space-y-10">
         {/* STAT CARDS DINÁMICOS GLOBALES */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -555,18 +509,6 @@ export default function AdminDashboardKaori() {
             value={`Bs ${statsTotales.dinero.toLocaleString()}`}
             icon="💰"
             sub="Valor total stock"
-          />
-          <StatCard
-            label="Ofertas"
-            value={statsTotales.descuentos}
-            icon="🏷️"
-            sub="Artículos rebajados"
-          />
-          <StatCard
-            label="Consultas"
-            value={statsTotales.consultas}
-            icon="💬"
-            sub="Clicks totales"
           />
         </div>
 
@@ -986,6 +928,24 @@ export default function AdminDashboardKaori() {
           )}
         </AnimatePresence>
       </main>
+      // Dentro del return de AdminDashboard, antes del último
+      {seccion === "inventario" && (
+        <button
+          onClick={() => setSeccion("agregar")}
+          className="fixed bottom-6 right-5 z-30 w-14 h-14 bg-[#f97316] rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(249,115,22,0.4)] active:scale-90 transition-all"
+        >
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
