@@ -353,7 +353,7 @@ export default function TarjetaProducto({
         </h3>
 
         {/* Precio + badge dinámico */}
-        <div className="flex items-end justify-between min-h-[42px]">
+        <div className="flex items-end justify-between">
           <div className="flex flex-col justify-end">
             {precioOriginal && (
               <span className="text-[10px] text-gray-400 line-through leading-none mb-[2px]">
@@ -378,39 +378,6 @@ export default function TarjetaProducto({
               {dynamicBadge.text}
             </span>
           </div>
-        </div>
-
-        {/* Estrellas + barra de stock */}
-        <div className="flex items-center gap-1 bg-gray-50 px-2 py-[3px] rounded-md border border-gray-100">
-          {vendidos > 0 ? (
-            <>
-              <svg
-                className="w-3 h-3 text-[#F97316]"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-              <span className="text-[10px] text-gray-500 font-medium">
-                {vendidos} vendidos
-              </span>
-            </>
-          ) : (
-            <>
-              <svg
-                className="w-3 h-3 text-emerald-500"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span className="text-[10px] text-gray-500 font-medium">
-                Disponible
-              </span>
-            </>
-          )}
         </div>
       </div>
 
