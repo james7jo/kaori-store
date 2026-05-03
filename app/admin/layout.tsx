@@ -29,13 +29,6 @@ export default function AdminLayout({
   const inputRef = useRef<HTMLInputElement>(null);
   const inactividadRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ── Persistir sesión en sessionStorage (dura hasta cerrar pestaña) ──
-  useEffect(() => {
-    const sesion = sessionStorage.getItem("kaori_admin");
-    if (sesion === "ok") setAutorizado(true);
-    else setTimeout(() => inputRef.current?.focus(), 400);
-  }, []);
-
   // ── Timer de inactividad — solo corre si está autorizado ──
   useEffect(() => {
     if (!autorizado) return;
