@@ -85,6 +85,17 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link
+          rel="preconnect"
+          href="https://wgtfoomqsufstqlgfrzh.supabase.co"
+        />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link
+          rel="dns-prefetch"
+          href="https://wgtfoomqsufstqlgfrzh.supabase.co"
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#F8FAFC]">
         {children}
 

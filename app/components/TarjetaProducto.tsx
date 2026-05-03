@@ -220,30 +220,21 @@ export default function TarjetaProducto({
   const dynamicBadge = getDynamicBadge(producto, vendidos);
   const imageBadge = getImageBadge(producto);
 
-  // Carrusel automático — solo si hay más de una foto y hay stock
-  // ✅ DESPUÉS — cada tarjeta tiene su propio ritmo aleatorio
+  const [montado, setMontado] = useState(false);
+
   useEffect(() => {
-    if (todasLasFotos.length <= 1 || isAgotado) return;
+    setMontado(true);
+  }, []);
 
-    // Delay inicial aleatorio: entre 0 y 3 segundos antes de empezar
-    const delayInicial = Math.random() * 3000;
+  useEffect(() => {
+    if (!montado || todasLasFotos.length <= 1 || isAgotado) return;
 
-    // Intervalo aleatorio: entre 2.5 y 5 segundos por tarjeta
-    const intervaloMs = 2500 + Math.random() * 2500;
+    const intervalo = setInterval(() => {
+      setIndexImagen((prev) => (prev + 1) % todasLasFotos.length);
+    }, 3000);
 
-    let intervalo: ReturnType<typeof setInterval>;
-
-    const timeout = setTimeout(() => {
-      intervalo = setInterval(() => {
-        setIndexImagen((prev) => (prev + 1) % todasLasFotos.length);
-      }, intervaloMs);
-    }, delayInicial);
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(intervalo);
-    };
-  }, [todasLasFotos.length, isAgotado]);
+    return () => clearInterval(intervalo);
+  }, [montado, todasLasFotos.length, isAgotado]);
 
   // Leer consultas guardadas en localStorage
   useEffect(() => {
@@ -310,7 +301,7 @@ export default function TarjetaProducto({
           </div>
         )}
         {/* Pocas unidades — badge animado */}
-        {isPocas && (
+        {montado && isPocas && (
           <div className="absolute bottom-2 left-2 bg-amber-500 px-2 py-[3px] rounded-md shadow animate-pulse z-10">
             <span className="text-[10px] font-bold text-white uppercase">
               {stockActual === 1 ? "Última unidad" : `Quedan ${stockActual}`}
@@ -318,7 +309,7 @@ export default function TarjetaProducto({
           </div>
         )}
         {/* Dots del carrusel */}
-        {todasLasFotos.length > 1 && !isAgotado && (
+        {montado && todasLasFotos.length > 1 && !isAgotado && (
           <div className="absolute bottom-2 right-2 flex gap-[3px] z-10">
             {todasLasFotos.map((_, i) => (
               <span

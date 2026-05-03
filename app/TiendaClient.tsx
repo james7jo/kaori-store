@@ -8,6 +8,7 @@ import ModalDetalle from "./components/ModalDetalle";
 import { agregarAlCarrito } from "./components/CartContext";
 import VistaCarrito from "./components/VistaCarrito";
 import { useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 // ─── PALETA "SUNSET ENERGY" (CLARA Y PROFESIONAL) ─── // NO QUITAR
 // Fondo Base: #FFF8F1 (Crema/Naranja ultra claro, suave a la vista)
@@ -175,13 +176,17 @@ function CarruselSeccion({
     </section>
   );
 }
-export function TiendaClient() {
-  const [productos, setProductos] = useState<any[]>([]);
+export function TiendaClient({
+  productosIniciales = [],
+}: {
+  productosIniciales: any[];
+}) {
+  const [productos, setProductos] = useState<any[]>(productosIniciales);
+  const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaSel, setCategoriaSel] = useState("Todo");
   const [soloOfertas, setSoloOfertas] = useState(false);
   const [sel, setSel] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [buscadorVisible, setBuscadorVisible] = useState(false);
   const [modoManual, setModoManual] = useState(false);
@@ -190,6 +195,8 @@ export function TiendaClient() {
   const [subCategoriaSel, setSubCategoriaSel] = useState("Todas");
   const searchParams = useSearchParams();
   const productoIdUrl = searchParams.get("p");
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
@@ -223,20 +230,10 @@ export function TiendaClient() {
   }, [carrito]);
   const [cartOpen, setCartOpen] = useState(false);
   // Pon esto junto a tus otros useState (donde está carrito, productos, etc.)
-  const [ubicacion, setUbicacion] = useState<any>(() => {
-    if (typeof window !== "undefined") {
-      // Retornamos el texto directamente, sin parsearlo
-      return localStorage.getItem("ubicacion_kaori") || null;
-    }
-    return null;
-  });
+  const [ubicacion, setUbicacion] = useState<any>(null);
+  const [regionNombre, setRegionNombre] = useState<string>("");
   const [loadingGps, setLoadingGps] = useState(false);
-  const [regionNombre, setRegionNombre] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("region_kaori") || "";
-    }
-    return "";
-  });
+
   // Esta es la función que disparará el GPS
   const vincularGps = () => {
     setLoadingGps(true);
@@ -341,35 +338,6 @@ export function TiendaClient() {
     // Puedes agregar más subcategorías para Electro, PetShop, etc.
   };
 
-  // ─── CARGA DE PRODUCTOS DESDE SUPABASE ─── // NO QUITAR
-  useEffect(() => {
-    async function cargarProductos() {
-      try {
-        const { data, error } = await supabase
-          .from("productos")
-          .select(
-            "id, nombre, precio, imagen, galeria, descuento, stock, vendidos, categoria, subcategoria, created_at, consultas",
-          )
-          .order("id", { ascending: false });
-
-        if (error) throw error;
-
-        setProductos(data || []);
-        if (productoIdUrl && data) {
-          const encontrado = data.find(
-            (p) => p.id.toString() === productoIdUrl,
-          );
-          if (encontrado) setSel(encontrado);
-        }
-      } catch (error) {
-        console.error("Error cargando productos:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    cargarProductos();
-  }, [productoIdUrl]);
-
   // ─── LÓGICA DE FILTRADO CORREGIDA ───
   const productosFiltrados = productos.filter((p) => {
     // 1. Búsqueda por texto
@@ -412,25 +380,28 @@ export function TiendaClient() {
       .filter(Boolean); // Borramos si alguna categoría no tiene productos todavía
 
     // 3. Mezclamos el orden para que cada vez que refresquen cambie
-    return vitrina.sort(() => Math.random() - 0.5);
+    return vitrina.sort();
   };
-
-  const productosNovedades = obtenerVitrinaNovedades();
-  // ─── LÓGICA DE PRODUCTOS ALEATORIOS PARA LOS PASILLOS ───
   const getAleatorios = (cat: string) => {
-    return productos
-      .filter((p) => p.categoria === cat)
-      .sort(() => Math.random() - 0.5) // Se mezclan al refrescar
-      .slice(0, 10); // Solo 10 para que sea ágil
+    return (
+      productos
+        .filter((p) => p.categoria === cat)
+        // .sort(() => Math.random() - 0.5) ← BORRÁ ESTA LÍNEA
+        .slice(0, 10)
+    );
   };
 
-  const tecnoRandom = getAleatorios("Tecno");
-  const electroRandom = getAleatorios("Electro");
-  const petRandom = getAleatorios("PetShop");
-  const insumosRandom = getAleatorios("Insumos");
-  const pdfRandom = getAleatorios("PDF");
-  const digitalRandom = getAleatorios("Digital");
-  const outletRandom = getAleatorios("Outlet");
+  const productosNovedades = useMemo(
+    () => obtenerVitrinaNovedades(),
+    [productos],
+  );
+  const tecnoRandom = useMemo(() => getAleatorios("Tecno"), [productos]);
+  const electroRandom = useMemo(() => getAleatorios("Electro"), [productos]);
+  const petRandom = useMemo(() => getAleatorios("PetShop"), [productos]);
+  const insumosRandom = useMemo(() => getAleatorios("Insumos"), [productos]);
+  const pdfRandom = useMemo(() => getAleatorios("PDF"), [productos]);
+  const digitalRandom = useMemo(() => getAleatorios("Digital"), [productos]);
+  const outletRandom = useMemo(() => getAleatorios("Outlet"), [productos]);
   // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ─── // NO QUITAR
   const abrirProducto = (p: any) => {
     setSel(p);

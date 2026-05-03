@@ -1,15 +1,9 @@
 import { Suspense } from "react";
 import { TiendaClient } from "./TiendaClient";
-import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
+import { supabase } from "@/lib/supabase";
 
-// ✅ ESTO SE AGREGA — conexión a Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
-
-// ✅ ESTO SE AGREGA — metadatos dinámicos por producto
+// ─── METADATOS DINÁMICOS POR PRODUCTO ───
 export async function generateMetadata(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
@@ -37,11 +31,18 @@ export async function generateMetadata(props: {
     }
   }
 
-  return {}; // Si no hay ?p=, usa los metadatos del layout.tsx
+  return {};
 }
 
-// ✅ ESTO YA TENÍAS — no lo toques
-export default function Page() {
+// ─── PÁGINA PRINCIPAL ───
+export default async function Page() {
+  const { data: productosIniciales } = await supabase
+    .from("productos")
+    .select(
+      "id, nombre, precio, imagen, galeria, descuento, stock, vendidos, categoria, subcategoria, created_at, consultas",
+    )
+    .order("id", { ascending: false });
+
   return (
     <main>
       <Suspense
@@ -53,7 +54,7 @@ export default function Page() {
           </div>
         }
       >
-        <TiendaClient />
+        <TiendaClient productosIniciales={productosIniciales ?? []} />
       </Suspense>
     </main>
   );
