@@ -15,8 +15,6 @@ import { useSearchParams } from "next/navigation";
 // Texto Principal: #1F2937 (Gris Pizarra muy oscuro para máxima legibilidad)
 // Acento Principal: #F97316 (Naranja consolidado, transmite energía y acción)
 // Acento Secundario/Hover: #EA580C (Naranja más oscuro para interacciones)
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
 
 // ─── COMPONENTE PARA LAS FILAS HORIZONTALES ───
 import { useRef } from "react";
@@ -349,7 +347,9 @@ export function TiendaClient() {
       try {
         const { data, error } = await supabase
           .from("productos")
-          .select("*")
+          .select(
+            "id, nombre, precio, imagen, galeria, descuento, stock, vendidos, categoria, subcategoria, created_at, consultas",
+          )
           .order("id", { ascending: false });
 
         if (error) throw error;
