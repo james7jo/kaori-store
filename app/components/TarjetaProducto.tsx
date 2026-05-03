@@ -284,7 +284,7 @@ export default function TarjetaProducto({
             loading="lazy"
             onLoad={() => setLoaded(true)}
             initial={{ opacity: 0 }}
-            animate={{ opacity: loaded ? 1 : 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             className={`w-full h-full object-contain p-3 transition-transform duration-500 ${
