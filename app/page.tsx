@@ -39,7 +39,7 @@ export default async function Page() {
   const { data: productosIniciales } = await supabase
     .from("productos")
     .select(
-      "id, nombre, precio, imagen, galeria, descuento, stock, vendidos, categoria, subcategoria, created_at, consultas",
+      "id, nombre, precio, imagen, galeria, descuento, stock, vendidos, categoria, subcategoria, created_at, consultas, descripcion",
     )
     .order("id", { ascending: false });
 

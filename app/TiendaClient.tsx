@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import TarjetaProducto from "./components/TarjetaProducto";
@@ -8,7 +7,6 @@ import ModalDetalle from "./components/ModalDetalle";
 import { agregarAlCarrito } from "./components/CartContext";
 import VistaCarrito from "./components/VistaCarrito";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
 
 // ─── PALETA "SUNSET ENERGY" (CLARA Y PROFESIONAL) ─── // NO QUITAR
 // Fondo Base: #FFF8F1 (Crema/Naranja ultra claro, suave a la vista)
@@ -16,9 +14,6 @@ import { useMemo } from "react";
 // Texto Principal: #1F2937 (Gris Pizarra muy oscuro para máxima legibilidad)
 // Acento Principal: #F97316 (Naranja consolidado, transmite energía y acción)
 // Acento Secundario/Hover: #EA580C (Naranja más oscuro para interacciones)
-
-// ─── COMPONENTE PARA LAS FILAS HORIZONTALES ───
-import { useRef } from "react";
 
 // ─── CARRUSEL INFINITO DE MARCAS ───
 function MarcasAliadas() {
@@ -176,31 +171,48 @@ function CarruselSeccion({
     </section>
   );
 }
+// ─── CATEGORÍAS BIEN BOLIVIANAS Y ORDENADAS ─── // NO QUITAR
+const categoriasConfig = [
+  { id: "Todo", icon: "✨", label: "Novedades" },
+  { id: "Tecno", icon: "🎧", label: "Tecnología y Accesorios" },
+  { id: "Electro", icon: "🏠", label: "Electrodomésticos y Hogar" },
+  { id: "PetShop", icon: "🐶", label: "Pet Shop / Mascotas" },
+  { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
+  { id: "PDF", icon: "📑", label: "Libros y PDFs" },
+  { id: "Digital", icon: "🎮", label: "Juegos y Licencias" },
+  { id: "Outlet", icon: "💎", label: "Ofertas Medio Uso" },
+];
+const subCategorias: Record<string, { id: string; label: string }[]> = {
+  Tecno: [
+    { id: "PC", label: "Acces. y Comp. de PC" },
+    { id: "Celular", label: "Accesorios para Celular" },
+  ],
+  // Puedes agregar más subcategorías para Electro, PetShop, etc.
+};
 export function TiendaClient({
   productosIniciales = [],
 }: {
   productosIniciales: any[];
 }) {
   const [productos, setProductos] = useState<any[]>(productosIniciales);
-  const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaSel, setCategoriaSel] = useState("Todo");
+  const [subCategoriaSel, setSubCategoriaSel] = useState("Todas");
   const [soloOfertas, setSoloOfertas] = useState(false);
   const [sel, setSel] = useState<any>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [buscadorVisible, setBuscadorVisible] = useState(false);
   const [modoManual, setModoManual] = useState(false);
-  // 1. Declaramos el carrito, pero primero intentamos leer si ya tiene algo guardado
   const [carrito, setCarrito] = useState<any[]>([]);
-  const [subCategoriaSel, setSubCategoriaSel] = useState("Todas");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [ubicacion, setUbicacion] = useState<any>(null);
+  const [regionNombre, setRegionNombre] = useState<string>("");
+  const [loadingGps, setLoadingGps] = useState(false);
   const searchParams = useSearchParams();
-  const productoIdUrl = searchParams.get("p");
-  const [montado, setMontado] = useState(false);
-  useEffect(() => setMontado(true), []);
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
-    // 1. Cargar el Carrito (Este sigue igual, está bien)
+    // 1. Cargar el Carrito
     const carritoGuardado = localStorage.getItem("carrito_kaori");
     if (carritoGuardado) {
       try {
@@ -209,36 +221,100 @@ export function TiendaClient({
         console.error("Error al cargar el carrito local:", error);
       }
     }
-
-    // 2. 📍 Cargar la Ubicación y Región (¡REVISADO!)
+    // 2. Cargar la Ubicación y Región (¡REVISADO!)
     const locGuardada = localStorage.getItem("ubicacion_kaori");
     const regGuardada = localStorage.getItem("region_kaori");
-
     if (locGuardada) {
       // Cargamos el link directo, SIN JSON.parse
       setUbicacion(locGuardada);
     }
-
     if (regGuardada) {
       setRegionNombre(regGuardada);
     }
   }, []); // El array vacío hace que esto solo corra una vez al cargar la web, []);
-
   // 3. Efecto para GUARDAR el carrito automáticamente cada vez que cambie
   useEffect(() => {
     localStorage.setItem("carrito_kaori", JSON.stringify(carrito));
   }, [carrito]);
-  const [cartOpen, setCartOpen] = useState(false);
-  // Pon esto junto a tus otros useState (donde está carrito, productos, etc.)
-  const [ubicacion, setUbicacion] = useState<any>(null);
-  const [regionNombre, setRegionNombre] = useState<string>("");
-  const [loadingGps, setLoadingGps] = useState(false);
+  // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
+  // Su función es cerrar el cuadro de detalles del producto o buscador en lugar de cerrar toda la página web. // NO QUITAR
+  useEffect(() => {
+    const manejarBotonAtras = () => {
+      if (sel) setSel(null);
+      if (buscadorVisible) setBuscadorVisible(false);
+    };
+    window.addEventListener("popstate", manejarBotonAtras);
+    return () => window.removeEventListener("popstate", manejarBotonAtras);
+  }, [sel, buscadorVisible]);
+  // ─── LÓGICA DE FILTRADO CORREGIDA ───
+  const productosFiltrados = productos.filter((p) => {
+    // 1. Búsqueda por texto
+    const coincideBusqueda = p.nombre
+      .toLowerCase()
+      .includes(busqueda.toLowerCase());
 
+    // 2. Filtro de Ofertas
+    const coincideOferta = !soloOfertas || (p.descuento && p.descuento !== "");
+
+    // 3. Filtro de Categoría Madre (Tecno, Electro, etc.)
+    const coincideCatMadre =
+      categoriaSel === "Todo" || p.categoria === categoriaSel;
+
+    // 4. Filtro de Sub-categoría (PC, Celular)
+    const coincideSubCat =
+      subCategoriaSel === "Todas" || p.subcategoria === subCategoriaSel;
+
+    return (
+      coincideBusqueda && coincideCatMadre && coincideSubCat && coincideOferta
+    );
+  });
+  // ─── LÓGICA DE SECCIONES ───
+  const productosNovedades = useMemo(() => {
+    const categorias = [
+      "Tecno",
+      "Electro",
+      "PetShop",
+      "Insumos",
+      "Digital",
+      "Outlet",
+    ];
+    return categorias
+      .map((cat) => productos.find((p) => p.categoria === cat))
+      .filter(Boolean);
+  }, [productos]);
+
+  const tecnoRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "Tecno").slice(0, 10),
+    [productos],
+  );
+  const electroRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "Electro").slice(0, 10),
+    [productos],
+  );
+  const petRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "PetShop").slice(0, 10),
+    [productos],
+  );
+  const insumosRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "Insumos").slice(0, 10),
+    [productos],
+  );
+  const pdfRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "PDF").slice(0, 10),
+    [productos],
+  );
+  const digitalRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "Digital").slice(0, 10),
+    [productos],
+  );
+  const outletRandom = useMemo(
+    () => productos.filter((p) => p.categoria === "Outlet").slice(0, 10),
+    [productos],
+  );
   // Esta es la función que disparará el GPS
   const vincularGps = () => {
     setLoadingGps(true);
     setModoManual(false);
-
     // 1. Reloj de emergencia (8 segundos)
     const emergencia = setTimeout(() => {
       if (!ubicacion) {
@@ -248,21 +324,18 @@ export function TiendaClient({
         console.log("GPS muy lento, activando modo manual");
       }
     }, 8000);
-
     // 2. Pedir coordenadas al satélite
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         clearTimeout(emergencia);
         const { latitude, longitude } = pos.coords;
-        const coordsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`; // URL corregida para que abra bien en celus
-
+        const coordsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
         try {
           // 1. EL CAMBIO CLAVE: Agregamos &addressdetails=1 al final de la URL
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
           );
           const data = await res.json();
-
           // 2. SACAMOS LAS PIEZAS: Calle, Barrio y Ciudad
           const addr = data.address;
           const calle = addr.road || addr.pedestrian || addr.path || "";
@@ -307,101 +380,6 @@ export function TiendaClient({
     // Usamos el "motor" del archivo CartContext
     agregarAlCarrito(productoConCantidad, carrito, setCarrito);
   };
-
-  // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
-  // Su función es cerrar el cuadro de detalles del producto o buscador en lugar de cerrar toda la página web. // NO QUITAR
-  useEffect(() => {
-    const manejarBotonAtras = () => {
-      if (sel) setSel(null);
-      if (buscadorVisible) setBuscadorVisible(false);
-    };
-    window.addEventListener("popstate", manejarBotonAtras);
-    return () => window.removeEventListener("popstate", manejarBotonAtras);
-  }, [sel, buscadorVisible]);
-
-  // ─── CATEGORÍAS BIEN BOLIVIANAS Y ORDENADAS ─── // NO QUITAR
-  const categoriasConfig = [
-    { id: "Todo", icon: "✨", label: "Novedades" },
-    { id: "Tecno", icon: "🎧", label: "Tecnología y Accesorios" },
-    { id: "Electro", icon: "🏠", label: "Electrodomésticos y Hogar" },
-    { id: "PetShop", icon: "🐶", label: "Pet Shop / Mascotas" },
-    { id: "Insumos", icon: "🩺", label: "Insumos Médicos" },
-    { id: "PDF", icon: "📑", label: "Libros y PDFs" },
-    { id: "Digital", icon: "🎮", label: "Juegos y Licencias" },
-    { id: "Outlet", icon: "💎", label: "Ofertas Medio Uso" },
-  ];
-  const subCategorias: Record<string, { id: string; label: string }[]> = {
-    Tecno: [
-      { id: "PC", label: "Acces. y Comp. de PC" },
-      { id: "Celular", label: "Accesorios para Celular" },
-    ],
-    // Puedes agregar más subcategorías para Electro, PetShop, etc.
-  };
-
-  // ─── LÓGICA DE FILTRADO CORREGIDA ───
-  const productosFiltrados = productos.filter((p) => {
-    // 1. Búsqueda por texto
-    const coincideBusqueda = p.nombre
-      .toLowerCase()
-      .includes(busqueda.toLowerCase());
-
-    // 2. Filtro de Ofertas
-    const coincideOferta = !soloOfertas || (p.descuento && p.descuento !== "");
-
-    // 3. Filtro de Categoría Madre (Tecno, Electro, etc.)
-    const coincideCatMadre =
-      categoriaSel === "Todo" || p.categoria === categoriaSel;
-
-    // 4. Filtro de Sub-categoría (PC, Celular)
-    const coincideSubCat =
-      subCategoriaSel === "Todas" || p.subcategoria === subCategoriaSel;
-
-    return (
-      coincideBusqueda && coincideCatMadre && coincideSubCat && coincideOferta
-    );
-  });
-  // ─── LÓGICA DE VITRINA PARA NOVEDADES ───
-  const obtenerVitrinaNovedades = () => {
-    // 1. Sacamos los nombres de todas las categorías que tienes
-    const categorias = [
-      "Tecno",
-      "Electro",
-      "PetShop",
-      "Insumos",
-      "Digital",
-      "Outlet",
-    ];
-
-    // 2. Para cada categoría, buscamos el primer producto (el más nuevo)
-    const vitrina = categorias
-      .map((cat) => {
-        return productos.find((p) => p.categoria === cat);
-      })
-      .filter(Boolean); // Borramos si alguna categoría no tiene productos todavía
-
-    // 3. Mezclamos el orden para que cada vez que refresquen cambie
-    return vitrina.sort();
-  };
-  const getAleatorios = (cat: string) => {
-    return (
-      productos
-        .filter((p) => p.categoria === cat)
-        // .sort(() => Math.random() - 0.5) ← BORRÁ ESTA LÍNEA
-        .slice(0, 10)
-    );
-  };
-
-  const productosNovedades = useMemo(
-    () => obtenerVitrinaNovedades(),
-    [productos],
-  );
-  const tecnoRandom = useMemo(() => getAleatorios("Tecno"), [productos]);
-  const electroRandom = useMemo(() => getAleatorios("Electro"), [productos]);
-  const petRandom = useMemo(() => getAleatorios("PetShop"), [productos]);
-  const insumosRandom = useMemo(() => getAleatorios("Insumos"), [productos]);
-  const pdfRandom = useMemo(() => getAleatorios("PDF"), [productos]);
-  const digitalRandom = useMemo(() => getAleatorios("Digital"), [productos]);
-  const outletRandom = useMemo(() => getAleatorios("Outlet"), [productos]);
   // ─── MANEJO DEL MODAL DE DETALLE Y HISTORIAL ─── // NO QUITAR
   const abrirProducto = (p: any) => {
     setSel(p);
@@ -410,61 +388,12 @@ export function TiendaClient({
     const nuevaUrl = `${window.location.pathname}?p=${p.id}`;
     window.history.pushState({ modalOpen: true }, "", nuevaUrl);
   };
-
   // Evita que el historial del navegador se llene de basura si cierras el modal manualmente. // NO QUITAR
   const cerrarProducto = () => {
     setSel(null);
     window.history.replaceState(null, "", window.location.pathname);
     if (window.history.state?.modalOpen) window.history.back();
   };
-
-  // ─── PANTALLA DE CARGA ─── // NO QUITAR
-  if (loading)
-    return (
-      // FONDO DE CARGA CLARO: Sunset Cream
-      <div className="min-h-screen bg-[#FFF8F1] flex flex-col items-center justify-center relative overflow-hidden">
-        {/* Efecto de resplandor de fondo */}
-        <div className="absolute w-[300px] h-[300px] bg-[#F97316]/10 blur-[100px] rounded-full animate-pulse" />
-
-        <div className="relative flex flex-col items-center">
-          {/* Loader con diseño de diamante moderno */}
-          <div className="relative w-20 h-20 mb-8">
-            <div className="absolute inset-0 border-4 border-[#F97316]/20 rounded-2xl rotate-45" />
-            <div className="absolute inset-0 border-t-4 border-[#F97316] rounded-2xl rotate-45 animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl animate-bounce">⚡</span>
-            </div>
-          </div>
-
-          {/* Nombre con estilo bloqueado (no traducible) */}
-          <h1
-            translate="no"
-            className="text-4xl font-black italic tracking-tighter uppercase leading-none text-[#1F2937]"
-          >
-            KAORI
-            <span className="text-[#F97316] drop-shadow-[0_0_10px_rgba(249,115,22,0.4)]">
-              STORE
-            </span>
-          </h1>
-
-          {/* Barra de progreso minimalista */}
-          <div className="w-32 h-1 bg-gray-200 mt-6 rounded-full overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-r from-[#F97316] to-[#EA580C] animate-[loading_1.5s_infinite_ease-in-out]" />
-          </div>
-        </div>
-
-        <style jsx>{`
-          @keyframes loading {
-            0% {
-              transform: translateX(-100%);
-            }
-            100% {
-              transform: translateX(100%);
-            }
-          }
-        `}</style>
-      </div>
-    );
 
   return (
     // ─── EL FONDO ES SUNSET CREAM (#FFF8F1) - CLARO Y ENÉRGICO ─── // NO QUITAR
