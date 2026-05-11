@@ -2,6 +2,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import SimuladorPago from "@/app/components/SimuladorPago";
+import {
+  IconArrowRight,
+  IconCheck, // ← agregar
+  IconX,
+  IconShoppingCart,
+} from "@tabler/icons-react";
 
 interface Props {
   producto: any;
@@ -916,9 +922,7 @@ _Fecha: ${fecha}_`;
         </div>
 
         {/* FOOTER FIJO MEJORADO */}
-        {/* FOOTER SIMPLIFICADO - ACCIÓN DIRECTA */}
-        {/* FOOTER SIMPLIFICADO - ACCIÓN DIRECTA */}
-        <div className="bg-white/95 backdrop-blur-xl border-t border-orange-100 px-5 py-5 z-[80] flex gap-3 items-center shadow-[0_-12px_32px_rgba(249,115,22,0.12)] rounded-t-[2.5rem] absolute bottom-0 left-0 right-0">
+        <div className="bg-white/95 backdrop-blur-xl border-t border-orange-100 px-5 py-5 z-[80] flex gap-3 items-center absolute bottom-0 left-0 right-0 rounded-t-[2.5rem] shadow-[0_-12px_32px_rgba(249,115,22,0.08)]">
           {/* BOTÓN CARRITO */}
           <button
             type="button"
@@ -929,12 +933,12 @@ _Fecha: ${fecha}_`;
               setAgregado(true);
               setTimeout(() => setAgregado(false), 2000);
             }}
-            className={`relative w-[72px] h-[72px] flex-shrink-0 rounded-3xl flex items-center justify-center transition-all duration-300 border-2 ${
+            className={`relative w-14 h-14 flex-shrink-0 rounded-2xl flex items-center justify-center transition-all duration-300 ${
               Number(producto.stock) <= 0
-                ? "bg-gray-50 border-gray-200 opacity-50"
+                ? "bg-gray-50 border border-gray-200 cursor-not-allowed"
                 : agregado
-                  ? "bg-emerald-500 border-emerald-400"
-                  : "bg-white border-orange-400 hover:bg-orange-50 active:scale-95"
+                  ? "bg-emerald-500 border-none"
+                  : "bg-transparent border border-[#F97316] active:scale-95"
             }`}
           >
             <AnimatePresence mode="wait">
@@ -943,10 +947,10 @@ _Fecha: ${fecha}_`;
                   key="no-stock"
                   initial={{ scale: 0.5 }}
                   animate={{ scale: 1 }}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center gap-0.5"
                 >
-                  <span className="text-red-400 text-lg font-black">✕</span>
-                  <span className="text-[7px] font-bold text-gray-400 uppercase">
+                  <IconX size={16} stroke={2.5} className="text-gray-300" />
+                  <span className="text-[7px] font-bold text-gray-300 uppercase tracking-wide">
                     Agotado
                   </span>
                 </motion.div>
@@ -955,20 +959,9 @@ _Fecha: ${fecha}_`;
                   key="success"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  <svg
-                    className="w-7 h-7 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 12.75l6 6 9-13.5"
-                    />
-                  </svg>
+                  <IconCheck size={22} stroke={3} className="text-white" />
                 </motion.div>
               ) : (
                 <motion.div
@@ -976,78 +969,62 @@ _Fecha: ${fecha}_`;
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
-                  <svg
-                    className="w-7 h-7 text-orange-500"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="9" cy="21" r="1" />
-                    <circle cx="20" cy="21" r="1" />
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                  </svg>
+                  <IconShoppingCart
+                    size={20}
+                    stroke={1.8}
+                    className="text-[#F97316]"
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
           </button>
 
-          {/* BOTÓN COMPRAR — EL PROTAGONISTA */}
+          {/* BOTÓN COMPRAR */}
           <button
-            disabled={producto.stock <= 0}
-            onClick={() => setMostrandoPago(true)}
-            className={`relative flex-1 h-[72px] overflow-hidden flex items-center justify-between px-5 rounded-[28px] transition-all duration-200 active:scale-[0.97] ${
-              producto.stock <= 0
-                ? "bg-gray-100 border border-gray-200 text-gray-400"
-                : "bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_0_0_0_rgba(249,115,22,0.4)] animate-[pulse-ring_2.5s_ease-out_infinite]"
+            type="button"
+            disabled={Number(producto.stock) <= 0}
+            onClick={() => {
+              if (Number(producto.stock) <= 0) return;
+              setMostrandoPago(true);
+            }}
+            className={`relative flex-1 h-14 rounded-2xl flex items-center justify-between px-5 transition-all duration-200 active:scale-[0.97] ${
+              Number(producto.stock) <= 0
+                ? "bg-gray-100 border border-gray-200 cursor-not-allowed"
+                : "bg-[#1F2937]"
             }`}
           >
-            {/* Shimmer */}
-            {producto.stock > 0 && (
-              <span className="absolute inset-0 -skew-x-12 w-1/3 bg-white/20 animate-[shimmer_3s_ease-in-out_infinite] pointer-events-none" />
-            )}
-
-            <div className="flex flex-col items-start text-left relative z-10">
+            <div className="flex flex-col items-start">
               <span
-                className={`text-[10px] font-black uppercase tracking-[0.15em] leading-none ${
-                  producto.stock <= 0 ? "text-gray-400" : "text-black"
+                className={`text-[9px] font-bold uppercase tracking-[0.1em] leading-none ${
+                  Number(producto.stock) <= 0
+                    ? "text-gray-400"
+                    : "text-white/40"
                 }`}
               >
-                {producto.stock <= 0 ? "Sin stock" : "Compra Directa"}
+                {Number(producto.stock) <= 0 ? "Sin stock" : "Compra directa"}
               </span>
               <span
-                className={`text-[19px] font-black leading-snug mt-0.5 tracking-tight uppercase ${
-                  producto.stock <= 0 ? "text-gray-400" : "text-black"
+                className={`text-[15px] font-black uppercase tracking-tight leading-snug mt-0.5 ${
+                  Number(producto.stock) <= 0 ? "text-gray-300" : "text-white"
                 }`}
               >
-                {producto.stock <= 0
+                {Number(producto.stock) <= 0
                   ? "Agotado"
                   : `COMPRAR ${producto.nombre.split(" ").slice(0, 2).join(" ")}`}
               </span>
             </div>
-
             <div
-              className={`relative z-10 w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
-                producto.stock <= 0
-                  ? "bg-gray-200"
-                  : "bg-white/20 border-2 border-white/50"
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                Number(producto.stock) <= 0 ? "bg-gray-200" : "bg-[#F97316]"
               }`}
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={producto.stock <= 0 ? "#9ca3af" : "white"}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
+              <IconArrowRight
+                size={16}
+                stroke={2.5}
+                className={
+                  Number(producto.stock) <= 0 ? "text-gray-400" : "text-white"
+                }
+              />
             </div>
           </button>
         </div>

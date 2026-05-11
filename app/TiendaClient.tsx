@@ -7,6 +7,13 @@ import ModalDetalle from "./components/ModalDetalle";
 import { agregarAlCarrito } from "./components/CartContext";
 import VistaCarrito from "./components/VistaCarrito";
 import { useSearchParams } from "next/navigation";
+import {
+  IconHome2,
+  IconFlame,
+  IconBolt,
+  IconSearch,
+  IconShoppingCart,
+} from "@tabler/icons-react";
 
 // ─── PALETA "SUNSET ENERGY" (CLARA Y PROFESIONAL) ─── // NO QUITAR
 // Fondo Base: #FFF8F1 (Crema/Naranja ultra claro, suave a la vista)
@@ -209,6 +216,8 @@ export function TiendaClient({
   const [regionNombre, setRegionNombre] = useState<string>("");
   const [loadingGps, setLoadingGps] = useState(false);
   const searchParams = useSearchParams();
+  const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const chipsScrollRef = useRef<HTMLDivElement>(null);
 
   // 2. Efecto para CARGAR el carrito al entrar a la web
   useEffect(() => {
@@ -620,79 +629,43 @@ export function TiendaClient({
       </AnimatePresence>
 
       {/* ─── CHIPS (CON DISEÑO SERIO) ─── */}
-      <div className="flex gap-3 overflow-x-auto px-4 py-8 no-scrollbar scroll-smooth">
-        {categoriasConfig.map((cat) => (
+      <div
+        ref={chipsScrollRef}
+        className="flex flex-nowrap gap-2 overflow-x-auto px-4 py-6 no-scrollbar"
+      >
+        {categoriasConfig.map((cat, i) => (
           <button
             key={cat.id}
+            ref={(el) => {
+              chipRefs.current[i] = el;
+            }}
             onClick={() => {
               setCategoriaSel(cat.id);
               setSoloOfertas(false);
+              // Centrar el chip en pantalla
+              setTimeout(() => {
+                chipRefs.current[i]?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "nearest",
+                  inline: "center",
+                });
+              }, 50);
             }}
-            className={`px-7 py-3.5 rounded-full text-[10px] font-black uppercase transition-all flex-shrink-0 border shadow-sm ${
+            className={`px-4 rounded-full font-black uppercase tracking-[0.05em] transition-all duration-300 flex-shrink-0 whitespace-nowrap ${
               categoriaSel === cat.id && !soloOfertas
-                ? "bg-[#F97316] border-transparent text-white scale-105 shadow-orange-500/20"
-                : "bg-white border-gray-100 text-gray-600 hover:border-[#F97316]/30"
+                ? "bg-orange-500/10 text-[#F97316] border border-orange-500/30 text-[12px] py-2.5 scale-105"
+                : "bg-white text-gray-300 border border-[#ebebeb] text-[10px] py-2"
             }`}
           >
             {cat.label}
           </button>
         ))}
       </div>
-
-      {/* ─── LISTADO (ALTO CONTRASTE) ─── */}
-      <div className="px-5 flex justify-between items-end mb-8">
-        <div>
-          <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.3em] mb-1">
-            Lo más reciente
-          </p>
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-[#1F2937] leading-none">
-            {soloOfertas
-              ? "Super Ofertas"
-              : categoriaSel === "Todo"
-                ? "Novedades"
-                : categoriasConfig.find((c) => c.id === categoriaSel)?.label}
-          </h2>
-        </div>
-        <div className="bg-white px-4 py-1.5 rounded-full border border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest shadow-sm">
-          {productosFiltrados.length} Productos
-        </div>
+      <div className="px-4 mb-4">
+        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+          {productosFiltrados.length} productos
+        </span>
       </div>
-      <AnimatePresence>
-        {categoriaSel === "Tecno" && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="px-5 mb-6 flex gap-2 overflow-x-auto no-scrollbar"
-          >
-            <button
-              onClick={() => setSubCategoriaSel("Todas")}
-              className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
-                subCategoriaSel === "Todas"
-                  ? "bg-[#1F2937] border-transparent text-white shadow-lg"
-                  : "bg-white border-gray-100 text-gray-400"
-              }`}
-            >
-              Todo
-            </button>
-
-            {subCategorias["Tecno"].map((sub) => (
-              <button
-                key={sub.id}
-                onClick={() => setSubCategoriaSel(sub.id)}
-                className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
-                  subCategoriaSel === sub.id
-                    ? "bg-[#F97316] border-transparent text-white shadow-lg"
-                    : "bg-white border-gray-100 text-gray-400"
-                }`}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* PRODUCTOS */}
       {/* ─── PASILLOS INTELIGENTES DE KAORI STORE ─── */}
       <div className="pb-10">
@@ -803,9 +776,8 @@ export function TiendaClient({
           </div>
         )}
       </div>
-
-      {/* ─── NAVBAR INFERIOR (MODERNO E IOS STYLE) ─── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 px-2 py-5 flex items-end justify-center z-50 rounded-t-[2.5rem] shadow-[0_-15px_40px_rgba(0,0,0,0.03)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#ebebeb] px-2 py-2.5 pb-4 flex items-center justify-around z-50">
+        {/* INICIO */}
         <button
           onClick={() => {
             setCategoriaSel("Todo");
@@ -814,77 +786,119 @@ export function TiendaClient({
             setBuscadorVisible(false);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className={`w-1/5 flex flex-col items-center justify-center gap-1.5 transition-all ${categoriaSel === "Todo" && !soloOfertas && !buscadorVisible ? "text-[#F97316] scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.2)]" : "text-gray-400"}`}
+          className="w-1/5 flex flex-col items-center gap-1 active:scale-95 transition-transform"
         >
-          <span className="text-2xl">🏠</span>
-          <span className="text-[8px] font-black uppercase tracking-[0.1em]">
+          <IconHome2
+            size={21}
+            stroke={1.8}
+            className={`transition-colors ${
+              categoriaSel === "Todo" && !soloOfertas && !buscadorVisible
+                ? "text-[#F97316]"
+                : "text-gray-300"
+            }`}
+          />
+          <span
+            className={`text-[8px] font-black uppercase tracking-[0.06em] transition-colors ${
+              categoriaSel === "Todo" && !soloOfertas && !buscadorVisible
+                ? "text-[#F97316]"
+                : "text-gray-300"
+            }`}
+          >
             Inicio
           </span>
         </button>
 
+        {/* OFERTAS */}
         <button
           onClick={() => {
             setSoloOfertas(true);
             setCategoriaSel("Todo");
             setBuscadorVisible(false);
           }}
-          className={`w-1/5 flex flex-col items-center justify-center gap-1.5 transition-all ${soloOfertas ? "text-[#EF4444] scale-110 drop-shadow-[0_0_10px_rgba(239,68,68,0.2)]" : "text-gray-400"}`}
+          className="w-1/5 flex flex-col items-center gap-1 active:scale-95 transition-transform relative"
         >
-          <span className="text-2xl relative flex items-center justify-center">
-            🔥{" "}
-            {productos.some((p) => p.descuento) && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#EF4444] rounded-full animate-ping shadow-[0_0_8px_rgba(239,68,68,0.4)]"></span>
-            )}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-[0.1em]">
+          {productos.some((p) => p.descuento) && (
+            <span className="absolute top-0 right-[calc(50%-17px)] w-[5px] h-[5px] bg-[#EF4444] rounded-full" />
+          )}
+          <IconFlame
+            size={21}
+            stroke={1.8}
+            className={`transition-colors ${
+              soloOfertas ? "text-[#EF4444]" : "text-gray-300"
+            }`}
+          />
+          <span
+            className={`text-[8px] font-black uppercase tracking-[0.06em] transition-colors ${
+              soloOfertas ? "text-[#EF4444]" : "text-gray-300"
+            }`}
+          >
             Ofertas
           </span>
         </button>
 
+        {/* EXPLORAR — outline, mismo nivel */}
         <button
           onClick={() => setMenuAbierto(true)}
-          className="w-1/5 flex flex-col items-center justify-center relative active:scale-95 transition-transform"
+          className="w-1/5 flex flex-col items-center gap-1 active:scale-95 transition-transform"
         >
-          <div className="bg-[#F97316] p-4.5 rounded-3xl -mt-14 shadow-[0_15px_30px_rgba(249,115,22,0.3)] border-4 border-white text-white flex items-center justify-center">
-            <span className="text-3xl drop-shadow-md">⚡</span>
+          <div className="w-[40px] h-[40px] rounded-[12px] border border-[#F97316] flex items-center justify-center">
+            <IconBolt size={19} stroke={2} className="text-[#F97316]" />
           </div>
-          <span className="text-[8px] font-black uppercase tracking-[0.1em] mt-3.5 text-[#F97316]">
+          <span className="text-[8px] font-black uppercase tracking-[0.06em] text-[#F97316]">
             Explorar
           </span>
         </button>
 
+        {/* BUSCAR */}
         <button
           onClick={() => setBuscadorVisible(!buscadorVisible)}
-          className={`w-1/5 flex flex-col items-center justify-center gap-1.5 transition-all ${buscadorVisible ? "text-[#F97316] scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.2)]" : "text-gray-400"}`}
+          className="w-1/5 flex flex-col items-center gap-1 active:scale-95 transition-transform"
         >
-          <span className="text-2xl">🔍</span>
-          <span className="text-[8px] font-black uppercase tracking-[0.1em]">
+          <IconSearch
+            size={21}
+            stroke={1.8}
+            className={`transition-colors ${
+              buscadorVisible ? "text-[#F97316]" : "text-gray-300"
+            }`}
+          />
+          <span
+            className={`text-[8px] font-black uppercase tracking-[0.06em] transition-colors ${
+              buscadorVisible ? "text-[#F97316]" : "text-gray-300"
+            }`}
+          >
             Buscar
           </span>
         </button>
 
+        {/* CARRITO */}
         <button
           onClick={() => setCartOpen(true)}
-          className={`w-1/5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all duration-300 ${
-            cartOpen ? "text-[#F97316] scale-110" : "text-gray-400"
-          }`}
+          className="w-1/5 flex flex-col items-center gap-1 active:scale-95 transition-transform relative"
         >
-          <span className="text-2xl relative flex items-center justify-center">
-            🛒
-            <AnimatePresence>
-              {carrito.length > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -top-1.5 -right-1.5 bg-[#F97316] text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm"
-                >
-                  {carrito.length}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-[0.1em]">
+          <AnimatePresence>
+            {carrito.length > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute top-0 right-[calc(50%-19px)] bg-[#F97316] text-white text-[8px] w-[15px] h-[15px] rounded-full flex items-center justify-center font-black border-2 border-white"
+              >
+                {carrito.length}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <IconShoppingCart
+            size={21}
+            stroke={1.8}
+            className={`transition-colors ${
+              cartOpen ? "text-[#F97316]" : "text-gray-300"
+            }`}
+          />
+          <span
+            className={`text-[8px] font-black uppercase tracking-[0.06em] transition-colors ${
+              cartOpen ? "text-[#F97316]" : "text-gray-300"
+            }`}
+          >
             Carrito
           </span>
         </button>
