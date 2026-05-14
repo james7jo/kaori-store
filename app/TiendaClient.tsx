@@ -256,6 +256,21 @@ export function TiendaClient({
         setBuscadorVisible(false);
         return;
       }
+      if (soloOfertas) {
+        setSoloOfertas(false);
+        setCategoriaSel("Todo");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      if (
+        categoriaSel === "Tecno" &&
+        subCategoriaSel !== "Todas" &&
+        subCategoriaSel !== "Vista"
+      ) {
+        setSubCategoriaSel("Todas");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       if (categoriaSel !== "Todo") {
         setCategoriaSel("Todo");
         setSoloOfertas(false);
@@ -266,7 +281,7 @@ export function TiendaClient({
     };
     window.addEventListener("popstate", manejarBotonAtras);
     return () => window.removeEventListener("popstate", manejarBotonAtras);
-  }, [sel, buscadorVisible, categoriaSel]);
+  }, [sel, buscadorVisible, categoriaSel, soloOfertas]);
   // ─── LÓGICA DE FILTRADO CORREGIDA ───
   const productosFiltrados = productos.filter((p) => {
     // 1. Búsqueda por texto
@@ -283,7 +298,9 @@ export function TiendaClient({
 
     // 4. Filtro de Sub-categoría (PC, Celular)
     const coincideSubCat =
-      subCategoriaSel === "Todas" || p.subcategoria === subCategoriaSel;
+      subCategoriaSel === "Todas" ||
+      subCategoriaSel === "Vista" ||
+      p.subcategoria === subCategoriaSel;
 
     return (
       coincideBusqueda && coincideCatMadre && coincideSubCat && coincideOferta
@@ -680,6 +697,58 @@ export function TiendaClient({
           {productosFiltrados.length} productos
         </span>
       </div>
+
+      {/* ─── CHIPS HIJOS DE TECNO ─── */}
+      <AnimatePresence>
+        {categoriaSel === "Tecno" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="px-4 mb-4 flex gap-2 overflow-x-auto no-scrollbar"
+          >
+            <button
+              onClick={() => {
+                setSubCategoriaSel("Todas");
+                window.history.pushState({ sub: "Todas" }, "");
+              }}
+              className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
+                subCategoriaSel === "Todas" || subCategoriaSel === "Vista"
+                  ? "bg-[#1F2937] border-transparent text-white shadow-lg"
+                  : "bg-white border-gray-100 text-gray-400"
+              }`}
+            >
+              Todo
+            </button>
+            <button
+              onClick={() => {
+                setSubCategoriaSel("PC");
+                window.history.pushState({ sub: "PC" }, "");
+              }}
+              className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
+                subCategoriaSel === "PC"
+                  ? "bg-[#F97316] border-transparent text-white shadow-lg"
+                  : "bg-white border-gray-100 text-gray-400"
+              }`}
+            >
+              Acces. y Comp. de PC
+            </button>
+            <button
+              onClick={() => {
+                setSubCategoriaSel("Celular");
+                window.history.pushState({ sub: "Celular" }, "");
+              }}
+              className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase transition-all flex-shrink-0 border ${
+                subCategoriaSel === "Celular"
+                  ? "bg-[#F97316] border-transparent text-white shadow-lg"
+                  : "bg-white border-gray-100 text-gray-400"
+              }`}
+            >
+              Accesorios para Celular
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* PRODUCTOS */}
       {/* ─── PASILLOS INTELIGENTES DE KAORI STORE ─── */}
       <div className="pb-10">
