@@ -275,6 +275,13 @@ export function TiendaClient({
         setCategoriaSel("Todo");
         setSoloOfertas(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(() => {
+          chipRefs.current[0]?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
+        }, 50);
         return;
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
