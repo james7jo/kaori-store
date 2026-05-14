@@ -246,9 +246,6 @@ export function TiendaClient({
     localStorage.setItem("carrito_kaori", JSON.stringify(carrito));
   }, [carrito]);
   // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
-  // Su función es cerrar el cuadro de detalles del producto o buscador en lugar de cerrar toda la página web. // NO QUITAR
-  // ─── LÓGICA DE CONTROL DE HISTORIAL (BOTÓN ATRÁS) ───
-  // Su función es cerrar el cuadro de detalles del producto o buscador en lugar de cerrar toda la página web. // NO QUITAR
   useEffect(() => {
     const manejarBotonAtras = () => {
       if (sel) {
@@ -259,14 +256,9 @@ export function TiendaClient({
         setBuscadorVisible(false);
         return;
       }
-      if (categoriaSel === "Tecno" && subCategoriaSel !== "Vista") {
-        setSubCategoriaSel("Vista");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
       if (categoriaSel !== "Todo") {
         setCategoriaSel("Todo");
-        setSubCategoriaSel("Todas");
+        setSoloOfertas(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
@@ -274,7 +266,7 @@ export function TiendaClient({
     };
     window.addEventListener("popstate", manejarBotonAtras);
     return () => window.removeEventListener("popstate", manejarBotonAtras);
-  }, [sel, buscadorVisible, categoriaSel, subCategoriaSel]);
+  }, [sel, buscadorVisible, categoriaSel]);
   // ─── LÓGICA DE FILTRADO CORREGIDA ───
   const productosFiltrados = productos.filter((p) => {
     // 1. Búsqueda por texto
@@ -662,7 +654,9 @@ export function TiendaClient({
             onClick={() => {
               setCategoriaSel(cat.id);
               setSoloOfertas(false);
-              // Centrar el chip en pantalla
+              if (cat.id === "Tecno") setSubCategoriaSel("Vista");
+              else setSubCategoriaSel("Todas");
+              window.history.pushState({ cat: cat.id }, "");
               setTimeout(() => {
                 chipRefs.current[i]?.scrollIntoView({
                   behavior: "smooth",
